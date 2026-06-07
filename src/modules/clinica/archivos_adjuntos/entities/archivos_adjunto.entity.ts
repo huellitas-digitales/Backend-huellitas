@@ -2,11 +2,15 @@ import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from '../../../../infraestructura/database/base.entity';
 import { HistorialClinico } from '../../historial_clinico/entities/historial_clinico.entity';
 import { Usuario } from '../../../identidad/usuarios/entities/usuario.entity';
-
+import { Hospitalizacion } from '../../hospitalizaciones/entities/hospitalizacione.entity'; // 👈 IMPORTAR ESTO
 @Entity('archivos_adjuntos')
 export class ArchivoAdjunto extends BaseEntity {
-  @Column({ name: 'id_historial_fk', type: 'uuid' })
-  id_historial_fk: string;
+  @Column({ name: 'id_historial_fk', type: 'uuid', nullable: true })
+  id_historial_fk: string | null;
+
+  @Column({ name: 'id_hospitalizacion_fk', type: 'uuid', nullable: true }) // 👈 NUEVA COLUMNA
+  id_hospitalizacion_fk: string | null;
+
 
   @Column({ name: 'url_archivo', type: 'varchar', length: 500 })
   urlArchivo: string;
@@ -15,7 +19,7 @@ export class ArchivoAdjunto extends BaseEntity {
   tipoArchivo: string;
 
   @Column({ name: 'nombre_archivo', type: 'varchar', length: 200, nullable: true })
-  nombreArchivo: string;
+  nombreArchivo: string | null;
 
   @Column({ name: 'tipo_estudio', type: 'varchar', length: 50, default: 'Otro' })
   tipoEstudio: string;
@@ -27,21 +31,25 @@ export class ArchivoAdjunto extends BaseEntity {
   estadoArchivo: string;
 
   @Column({ name: 'fecha_estudio', type: 'date', nullable: true })
-  fechaEstudio: Date;
+  fechaEstudio: Date | null;
 
   @Column({ name: 'observaciones', type: 'text', nullable: true })
-  observaciones: string;
+  observaciones: string | null;
 
   @Column({ name: 'created_by', type: 'uuid', nullable: false })
   createdBy: string;
 
   @Column({ name: 'updated_by', type: 'uuid', nullable: true })
-  updatedBy: string;
+  updatedBy: string | null;
 
   // 🔗 LLAVES FORÁNEAS
   @ManyToOne(() => HistorialClinico)
   @JoinColumn({ name: 'id_historial_fk' })
   historialClinico: HistorialClinico;
+
+  @ManyToOne(() => Hospitalizacion, (hosp) => hosp.archivos)
+  @JoinColumn({ name: 'id_hospitalizacion_fk' })
+  hospitalizacion: Hospitalizacion;
 
   @ManyToOne(() => Usuario)
   @JoinColumn({ name: 'created_by' })

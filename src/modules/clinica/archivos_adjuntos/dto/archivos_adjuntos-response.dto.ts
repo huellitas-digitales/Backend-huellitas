@@ -5,13 +5,16 @@ export class ArchivosAdjuntosResponseDto {
   id: string;
 
   @ApiProperty()
-  id_historial_fk: string;
+  id_historial_fk?: string;
+
+  @ApiProperty()
+  id_hospitalizacion_fk?: string;
 
   @ApiProperty()
   url_archivo: string;
 
-  @ApiProperty()
-  nombre_archivo: string;
+  @ApiProperty({ required: false })
+  nombre_archivo?: string;
 
   @ApiProperty()
   tipo_archivo: string;
@@ -25,18 +28,9 @@ export class ArchivosAdjuntosResponseDto {
   @ApiProperty()
   estado_archivo: string;
 
-  @ApiProperty()
-  fecha_estudio: Date;
+  @ApiProperty({ required: false })
+  fecha_estudio?: Date;
 
-  @ApiProperty()
-  observaciones: string;
-
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiProperty()
-  updatedAt: Date;
-
-  @ApiProperty()
-  createdBy: string;
+  @ApiProperty({ required: false })
+  observaciones?: string;
 }
