@@ -1,5 +1,6 @@
 // src/modules/clinica/citas/dto/create-cita.dto.ts
-import { IsUUID, IsInt, IsString, IsEnum, IsDateString, MaxLength } from 'class-validator';
+import { IsUUID, IsInt, IsString, IsEnum, MaxLength, IsDate } from 'class-validator'; // Quitamos IsDateString y ponemos IsDate
+import { Type } from 'class-transformer'; // Añadimos esto
 import { ApiProperty } from '@nestjs/swagger';
 
 export enum OrigenReserva {
@@ -13,9 +14,11 @@ export class CreateCitaDto {
     example: '2026-04-15T10:00:00.000Z', 
     description: 'Fecha y hora de inicio de la cita en formato ISO 8601' 
   })
-  @IsDateString({}, { message: 'La fecha de inicio debe ser una fecha ISO válida' })
-  fecha_hora_inicio: string;
+  @Type(() => Date) // Transforma el texto de Postman en un objeto Date real
+  @IsDate({ message: 'La fecha de inicio debe ser una fecha válida' })
+  fecha_hora_inicio: Date; // Cambiamos el tipo de string a Date
 
+  // ... el resto de tu DTO se queda exactamente igual ...
   @ApiProperty({ 
     example: 'Consulta por dolor estomacal y vómitos', 
     maxLength: 150 

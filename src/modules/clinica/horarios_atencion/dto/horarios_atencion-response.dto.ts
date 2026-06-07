@@ -1,11 +1,22 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class HorariosAtencionResponseDto {
+export class HorarioVeterinarioResponseDto {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
-  id_veterinario_fk: string;
+  nombres: string;
+
+  @ApiProperty()
+  apellidos: string;
+
+  @ApiProperty()
+  email: string;
+}
+
+export class HorariosAtencionResponseDto {
+  @ApiProperty()
+  id: string;
 
   @ApiProperty()
   dia_semana: number;
@@ -19,12 +30,6 @@ export class HorariosAtencionResponseDto {
   @ApiProperty()
   activo: boolean;
 
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiProperty()
-  updatedAt: Date;
-
-  @ApiProperty()
-  createdBy: string;
+  @ApiProperty({ type: HorarioVeterinarioResponseDto, required: false })
+  veterinario?: HorarioVeterinarioResponseDto;
 }

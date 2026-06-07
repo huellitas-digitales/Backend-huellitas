@@ -27,6 +27,9 @@ export class Cita extends BaseEntity {
   @Column({ name: 'requiere_confirmacion', type: 'boolean', default: false })
   requiere_confirmacion: boolean;
 
+  @Column({ name: 'motivo_cancelacion', type: 'varchar', length: 100, nullable: true })
+  motivo_cancelacion: string | null;
+
   @Column({ name: 'id_mascota_fk', type: 'uuid', nullable: false })
   id_mascota_fk: string;
 
