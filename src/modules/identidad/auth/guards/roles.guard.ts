@@ -8,7 +8,7 @@ export class RolesGuard implements CanActivate {
 
   canActivate(context: ExecutionContext): boolean {
     // 🛡️ INTERRUPTOR MAESTRO: Si está en Modo Dios, no hacemos preguntas
-    if (process.env.MODO_DIOS === 'true') {
+    if (process.env.MODO_DIOS === 'true' && process.env.NODE_ENV !== 'production') {
       return true;
     }
 

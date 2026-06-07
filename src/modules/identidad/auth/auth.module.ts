@@ -11,10 +11,12 @@ import { JwtStrategy } from './strategies/jwt.strategy';
 // Tu infraestructura
 import { MyConfigModule } from '../../../infraestructura/config/config.module';
 import { MyJwtConfig } from '../../../infraestructura/config/services/jwt.config';
+import { LogsSistemaModule } from '../../core/logs_sistema/logs_sistema.module';
 
 @Module({
   imports: [
     UsuariosModule,
+    LogsSistemaModule,
     PassportModule.register({ defaultStrategy: 'jwt' }),
 
     MyConfigModule,
