@@ -3,6 +3,11 @@
 /node_modules
 /build
 
+# Claude
+.agent/
+docx/
+CONTRATO_INTEGRACION_FRONTEND.md
+
 # Logs
 logs
 *.log

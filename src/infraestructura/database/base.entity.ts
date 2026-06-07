@@ -17,5 +17,5 @@ export abstract class BaseEntity {
 
   // ¡Magia pura! TypeORM llenará esto cuando hagamos un "Soft Delete"
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
-  deletedAt: Date;
+  deletedAt: Date | null;
 }

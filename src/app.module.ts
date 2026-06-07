@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { ScheduleModule } from '@nestjs/schedule';
 
 // Infraestructura
 import { MyConfigModule } from './infraestructura/config/config.module';
@@ -12,6 +13,7 @@ import { ServiciosModule } from './modules/core/servicios/servicios.module';
 import { RazasModule } from './modules/core/razas/razas.module';
 import { EspeciesModule } from './modules/core/especies/especies.module';
 import { ConfiguracionClinicaModule } from './modules/core/configuracion_clinica/configuracion_clinica.module';
+import { LogsSistemaModule } from './modules/core/logs_sistema/logs_sistema.module';
 
 // Identidad
 import { UsuariosModule } from './modules/identidad/usuarios/usuarios.module';
@@ -43,12 +45,17 @@ import { CierresCajaModule } from './modules/caja/cierres_caja/cierres_caja.modu
 import { RegistroNotificacionesModule } from './modules/comunicacion/registro_notificaciones/registro_notificaciones.module';
 import { RegistroEscaneoQRModule } from './modules/comunicacion/registro_escaneos_qr/registro_escaneos_qr.module';
 import { InteraccionesBotModule } from './modules/comunicacion/interacciones_bot/interacciones_bot.module';
+import { MensajeroModule } from './modules/comunicacion/mensajero/mensajero.module';
+import { NotificacionSchedulerModule } from './modules/comunicacion/notificacion-scheduler/notificacion-scheduler.module';
+import { BotApiModule } from './app/bot-api/bot-api.module';
 import { AuthModule } from './modules/identidad/auth/auth.module';
+import { ReportesModule } from './modules/reportes/reportes.module';
 
 @Module({
   imports: [
     MyConfigModule,
     MyDatabaseModule,
+    ScheduleModule.forRoot(),
 
     // Core
     RolesModule,
@@ -58,6 +65,7 @@ import { AuthModule } from './modules/identidad/auth/auth.module';
     CategoriasProductoModule,
     ConfiguracionClinicaModule,
     CatalogoVacunasModule,
+    LogsSistemaModule,
 
     // Identidad
     UsuariosModule,
@@ -89,7 +97,11 @@ import { AuthModule } from './modules/identidad/auth/auth.module';
     RegistroEscaneoQRModule,
     RegistroNotificacionesModule,
     InteraccionesBotModule,
+    MensajeroModule,
+    NotificacionSchedulerModule,
+    BotApiModule,
     AuthModule,
+    ReportesModule,
   ],
 })
 export class AppModule {}
