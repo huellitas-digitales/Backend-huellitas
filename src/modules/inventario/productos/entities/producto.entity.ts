@@ -10,6 +10,9 @@ export class Producto extends BaseEntity {
   @Column({ type: 'text', nullable: true })
   descripcion: string;
 
+  @Column({ name: 'imagen_url', type: 'varchar', length: 500, nullable: true })
+  imagen_url: string | null;
+
   @Column({ name: 'unidad_medida', type: 'varchar', length: 30, nullable: true })
   unidadMedida: string;
 
