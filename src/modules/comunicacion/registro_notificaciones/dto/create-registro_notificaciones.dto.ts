@@ -1,4 +1,4 @@
-import { IsString, IsUUID, IsOptional } from 'class-validator';
+import { IsString, IsUUID, IsOptional, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateRegistroNotificacionesDto {
@@ -6,16 +6,18 @@ export class CreateRegistroNotificacionesDto {
   @IsString()
   tipo_notificacion: string;
 
-  @ApiProperty({ example: 'WhatsApp' })
+  @ApiProperty({ example: 'WhatsApp', enum: ['WhatsApp', 'Email', 'SMS'] })
   @IsString()
+  @IsIn(['WhatsApp', 'Email', 'SMS'])
   canal_envio: string;
 
   @ApiProperty({ example: 'Recordatorio: Tu cita es mañana a las 10:00' })
   @IsString()
   cuerpo_mensaje: string;
 
-  @ApiProperty({ example: 'Pendiente' })
+  @ApiProperty({ example: 'Pendiente', enum: ['Pendiente', 'Enviado', 'Error'] })
   @IsString()
+  @IsIn(['Pendiente', 'Enviado', 'Error'])
   estado_envio: string;
 
   @ApiProperty({ example: 'uuid-usuario', required: false })

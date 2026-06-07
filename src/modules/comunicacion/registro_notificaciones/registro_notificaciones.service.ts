@@ -1,26 +1,59 @@
-import { Injectable } from '@nestjs/common';
-import { CreateRegistroNotificacioneDto } from './dto/create-registro_notificacione.dto';
-import { UpdateRegistroNotificacioneDto } from './dto/update-registro_notificacione.dto';
+import { Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { RegistroNotificacion } from './entities/registro_notificacione.entity';
+
+type CanalEnvio = 'WhatsApp' | 'Email' | 'SMS';
+
+export interface CrearNotificacionDto {
+  tipoNotificacion: string;
+  canalEnvio: CanalEnvio;
+  cuerpoMensaje: string;
+  idUsuarioFk?: string;
+  idCitaFk?: string;
+  idMascotaFk?: string;
+}
 
 @Injectable()
 export class RegistroNotificacionesService {
-  create(createRegistroNotificacioneDto: CreateRegistroNotificacioneDto) {
-    return 'This action adds a new registroNotificacione';
+
+  constructor(
+    @InjectRepository(RegistroNotificacion)
+    private readonly notifRepo: Repository<RegistroNotificacion>,
+  ) {}
+
+  // ── RF-17 | HU-12 — Crear notificación en cola (Pendiente) ─────────────────
+  async registrar(dto: CrearNotificacionDto): Promise<RegistroNotificacion> {
+    const notificacion = this.notifRepo.create({
+      tipoNotificacion: dto.tipoNotificacion,
+      canalEnvio: dto.canalEnvio,
+      cuerpoMensaje: dto.cuerpoMensaje,
+      estadoEnvio: 'Pendiente',
+      idUsuarioFk: dto.idUsuarioFk ?? null,
+      idCitaFk: dto.idCitaFk ?? null,
+      idMascotaFk: dto.idMascotaFk ?? null,
+    });
+    return this.notifRepo.save(notificacion);
   }
 
-  findAll() {
-    return `This action returns all registroNotificaciones`;
+  // ── Listado general con filtros ─────────────────────────────────────────────
+  async findAll(estado?: string): Promise<RegistroNotificacion[]> {
+    const where: any = {};
+    if (estado) where.estadoEnvio = estado;
+    return this.notifRepo.find({
+      where,
+      relations: ['usuario', 'mascota'],
+      order: { createdAt: 'DESC' },
+      take: 300,
+    });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} registroNotificacione`;
-  }
-
-  update(id: number, updateRegistroNotificacioneDto: UpdateRegistroNotificacioneDto) {
-    return `This action updates a #${id} registroNotificacione`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} registroNotificacione`;
+  async findOne(id: string): Promise<RegistroNotificacion> {
+    const notif = await this.notifRepo.findOne({
+      where: { id },
+      relations: ['usuario', 'mascota', 'cita'],
+    });
+    if (!notif) throw new NotFoundException('Notificación no encontrada.');
+    return notif;
   }
 }

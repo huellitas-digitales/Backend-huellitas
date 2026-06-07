@@ -8,5 +8,6 @@ import { InteraccionesBotController } from './interacciones_bot.controller';
   imports: [TypeOrmModule.forFeature([InteraccionBot])],
   controllers: [InteraccionesBotController],
   providers: [InteraccionesBotService],
+  exports: [InteraccionesBotService],
 })
 export class InteraccionesBotModule {}

@@ -18,6 +18,15 @@ export class RegistroNotificacion extends BaseEntity {
   @Column({ name: 'estado_envio', type: 'varchar', length: 20 })
   estadoEnvio: string; // 'Pendiente', 'Enviado', etc.
 
+  @Column({ name: 'id_usuario_fk', type: 'uuid', nullable: true })
+  idUsuarioFk: string | null;
+
+  @Column({ name: 'id_cita_fk', type: 'uuid', nullable: true })
+  idCitaFk: string | null;
+
+  @Column({ name: 'id_mascota_fk', type: 'uuid', nullable: true })
+  idMascotaFk: string | null;
+
   // 🔗 LLAVES FORÁNEAS
   @ManyToOne(() => Usuario)
   @JoinColumn({ name: 'id_usuario_fk' })
