@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MaxLength, IsOptional, IsInt, IsPositive } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsOptional, IsInt, IsPositive, IsUUID } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCatalogoVacunaDto {
@@ -22,4 +22,9 @@ export class CreateCatalogoVacunaDto {
   @IsInt()
   @IsPositive()
   id_especie_fk: number;
+
+  @ApiProperty({ required: false, description: 'ID del producto en inventario (UUID)' })
+  @IsUUID('4', { message: 'El id_producto_fk debe ser un UUID válido' })
+  @IsOptional()
+  id_producto_fk?: string;
 }

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Body, Param, UseGuards } from '@nestjs/common';
 import { ConfiguracionClinicaService } from './configuracion_clinica.service';
 import { CreateConfiguracionClinicaDto } from './dto/create-configuracion_clinica.dto';
 // ¡Importamos la seguridad activa!
@@ -13,7 +13,7 @@ export class ConfiguracionClinicaController {
   constructor(private readonly configService: ConfiguracionClinicaService) {}
 
   @Post()
-  @Roles('Administrador')
+  @Roles('Administrador', 'Veterinario', 'Cajero', 'Cliente')
   create(
     @Body() createDto: CreateConfiguracionClinicaDto,
     @CurrentUser('id') adminId: string, // <-- Extraemos tu UUID del token mágico
@@ -24,5 +24,15 @@ export class ConfiguracionClinicaController {
   @Get()
   findAll() {
     return this.configService.findAll();
+  }
+
+  @Patch(':clave')
+  @Roles('Administrador')
+  updateByClave(
+    @Param('clave') clave: string,
+    @Body() body: { valor: string; descripcion?: string },
+    @CurrentUser('id') adminId: string,
+  ) {
+    return this.configService.updateByClave(clave, body.valor, body.descripcion, adminId);
   }
 }

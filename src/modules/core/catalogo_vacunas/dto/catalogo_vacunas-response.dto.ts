@@ -1,21 +1,23 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+
+
 export class CatalogoVacunasResponseDto {
-  @ApiProperty()
   id: string;
-
-  @ApiProperty()
   nombre_vacuna: string;
-
-  @ApiProperty()
-  descripcion: string;
-
-  @ApiProperty()
+  descripcion: string | null;
   intervalo_revacunacion: string;
-
-  @ApiProperty()
+  id_especie_fk: number; // 👈 Agregar
   createdAt: Date;
-
-  @ApiProperty()
   updatedAt: Date;
+  producto?: {
+    id: string;
+    nombre: string;
+    precio_venta: number;
+    stock_actual: number;
+  };
+  especie?: {            // 👈 Agregar
+    id: number;
+    nombre: string;
+  };
 }

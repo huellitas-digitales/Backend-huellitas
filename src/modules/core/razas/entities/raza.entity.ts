@@ -21,7 +21,7 @@ export class Raza  {
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
   deletedAt: Date;
   // 🔗 LLAVE FORÁNEA: id_especie_fk
-  @ManyToOne(() => Especie)
+  @ManyToOne(() => Especie, { eager: true })
   @JoinColumn({ name: 'id_especie_fk' })
   especie: Especie;
 }

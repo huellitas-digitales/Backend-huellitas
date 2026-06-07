@@ -11,6 +11,9 @@ export class Servicio {
   @Column({ type: 'text', nullable: true })
   descripcion: string;
 
+  @Column({ name: 'imagen_url', type: 'varchar', length: 500, nullable: true })
+  imagen_url: string | null;
+
   // numeric(10,2) en PostgreSQL
   @Column({ type: 'numeric', precision: 10, scale: 2 })
   precio: number;

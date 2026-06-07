@@ -1,5 +1,6 @@
 import { Entity, Column, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn, DeleteDateColumn,PrimaryGeneratedColumn } from 'typeorm';
 import { Especie } from '../../especies/entities/especie.entity';
+import { Producto } from '../../../inventario/productos/entities/producto.entity';
 
 @Entity('catalogo_vacunas')
 export class CatalogoVacuna {
@@ -24,6 +25,9 @@ export class CatalogoVacuna {
   @DeleteDateColumn({ name: 'deleted_at', type: 'timestamp', nullable: true })
   deletedAt: Date;
 
+@Column({ name: 'id_producto_fk', type: 'uuid', nullable: true })
+  id_producto_fk: string;
+
   @Column({ type: 'int' })
   id_especie_fk: number;
 
@@ -31,4 +35,8 @@ export class CatalogoVacuna {
   @ManyToOne(() => Especie)
   @JoinColumn({ name: 'id_especie_fk' })
   especie: Especie;
+
+  @ManyToOne(() => Producto)
+  @JoinColumn({ name: 'id_producto_fk' })
+  producto: Producto;
 }

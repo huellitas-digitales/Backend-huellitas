@@ -18,6 +18,10 @@ export class RazasService extends BaseCrudService<Raza> {
     super(razaRepository, 'Raza');
   }
 
+  override async findAll(): Promise<Raza[]> {
+    return await this.razaRepository.find({ withDeleted: true });
+  }
+
   // Sobrescribimos el método create para añadir nuestra validación de negocio
   async createRaza(createRazaDto: CreateRazaDto) {
     // 1. Validamos que la especie exista (Si no existe, el findOne lanzará un NotFoundException)

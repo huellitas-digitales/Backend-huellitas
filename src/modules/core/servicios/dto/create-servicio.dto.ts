@@ -1,4 +1,4 @@
-import { IsString, IsNotEmpty, MaxLength, IsNumber, IsPositive, IsBoolean, IsOptional } from 'class-validator';
+import { IsString, IsNotEmpty, MaxLength, IsNumber, IsPositive, IsBoolean, IsOptional, IsUrl } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateServicioDto {
@@ -26,4 +26,10 @@ export class CreateServicioDto {
   @ApiProperty({ example: true, description: '¿Requiere un veterinario para realizarse?' })
   @IsBoolean()
   requiere_veterinario: boolean;
+
+  @ApiProperty({ example: 'https://res.cloudinary.com/...', required: false })
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  imagen_url?: string;
 }

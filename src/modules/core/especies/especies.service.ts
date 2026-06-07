@@ -17,6 +17,10 @@ export class EspeciesService extends BaseCrudService<Especie> {
 
   // ¡Y LISTO! Ya tienes findAll, findOne, update y remove funcionando gratis.
 
+  override async findAll(): Promise<Especie[]> {
+    return await this.especieRepository.find({ withDeleted: true });
+  }
+
   // Solo si necesitas sobrescribir algo específico, lo haces aquí.
   // Por ejemplo, el create con validación de duplicado (RF-05):
   async createEspecie(createEspecieDto: CreateEspecieDto) {
