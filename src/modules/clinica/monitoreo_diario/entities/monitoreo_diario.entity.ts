@@ -15,13 +15,13 @@ export class MonitoreoDiario extends BaseEntity {
   turno: string;
 
   @Column({ name: 'temperatura_c', type: 'numeric', precision: 4, scale: 2, nullable: true })
-  temperaturaC: number;
+  temperaturaC: number | null;
 
   @Column({ name: 'freq_cardiaca', type: 'integer', nullable: true })
-  freqCardiaca: number;
+  freqCardiaca: number | null;
 
   @Column({ name: 'freq_respiratoria', type: 'integer', nullable: true })
-  freqRespiratoria: number;
+  freqRespiratoria: number | null;
 
   @Column({ type: 'text' })
   observaciones: string;
@@ -30,7 +30,7 @@ export class MonitoreoDiario extends BaseEntity {
   createdBy: string;
 
   @Column({ name: 'updated_by', type: 'uuid', nullable: true })
-  updatedBy: string;
+  updatedBy: string | null;
 
   // 🔗 LLAVES FORÁNEAS
   @ManyToOne(() => Hospitalizacion)

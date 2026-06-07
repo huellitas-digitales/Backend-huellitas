@@ -1,5 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class MonitoreoVeterinarioResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  nombres: string;
+
+  @ApiProperty()
+  apellidos: string;
+
+  @ApiProperty()
+  email: string;
+}
+
 export class MonitoreoDiarioResponseDto {
   @ApiProperty()
   id: string;
@@ -8,29 +22,23 @@ export class MonitoreoDiarioResponseDto {
   id_hospitaliza_fk: string;
 
   @ApiProperty()
-  id_veterinario_fk: string;
-
-  @ApiProperty()
   turno: string;
 
-  @ApiProperty()
-  temperatura_c: number;
+  @ApiProperty({ required: false })
+  temperatura_c?: number;
 
-  @ApiProperty()
-  freq_cardiaca: number;
+  @ApiProperty({ required: false })
+  freq_cardiaca?: number;
 
-  @ApiProperty()
-  freq_respiratoria: number;
+  @ApiProperty({ required: false })
+  freq_respiratoria?: number;
 
   @ApiProperty()
   observaciones: string;
 
-  @ApiProperty()
-  createdAt: Date;
+  @ApiProperty({ type: MonitoreoVeterinarioResponseDto, required: false })
+  veterinario?: MonitoreoVeterinarioResponseDto;
 
   @ApiProperty()
-  updatedAt: Date;
-
-  @ApiProperty()
-  createdBy: string;
+  fecha_registro: Date;
 }

@@ -1,5 +1,30 @@
 import { ApiProperty } from '@nestjs/swagger';
 
+export class HospitalizacionMascotaResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  nombre: string;
+
+  @ApiProperty()
+  sexo: string;
+}
+
+export class HospitalizacionVeterinarioResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  nombres: string;
+
+  @ApiProperty()
+  apellidos: string;
+
+  @ApiProperty()
+  email: string;
+}
+
 export class HospitalizacionesResponseDto {
   @ApiProperty()
   id: string;
@@ -8,16 +33,10 @@ export class HospitalizacionesResponseDto {
   id_historial_fk: string;
 
   @ApiProperty()
-  id_mascota_fk: string;
-
-  @ApiProperty()
-  id_veterinario_responsable: string;
-
-  @ApiProperty()
   fecha_ingreso: Date;
 
-  @ApiProperty()
-  fecha_alta: Date;
+  @ApiProperty({ required: false })
+  fecha_alta?: Date;
 
   @ApiProperty()
   motivo_ingreso: string;
@@ -28,12 +47,9 @@ export class HospitalizacionesResponseDto {
   @ApiProperty()
   costo_por_dia: number;
 
-  @ApiProperty()
-  createdAt: Date;
+  @ApiProperty({ type: HospitalizacionMascotaResponseDto, required: false })
+  mascota?: HospitalizacionMascotaResponseDto;
 
-  @ApiProperty()
-  updatedAt: Date;
-
-  @ApiProperty()
-  createdBy: string;
+  @ApiProperty({ type: HospitalizacionVeterinarioResponseDto, required: false })
+  veterinario?: HospitalizacionVeterinarioResponseDto;
 }
