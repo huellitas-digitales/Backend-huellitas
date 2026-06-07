@@ -1,7 +1,8 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn,OneToMany } from 'typeorm';
 import { BaseEntity } from '../../../../infraestructura/database/base.entity';
 import { Mascota } from '../../../identidad/mascotas/entities/mascota.entity';
 import { Usuario } from '../../../identidad/usuarios/entities/usuario.entity';
+import { HistorialClinico } from '../../historial_clinico/entities/historial_clinico.entity';
 
 @Entity('expediente_clinico')
 export class ExpedienteClinico extends BaseEntity {
@@ -32,4 +33,7 @@ export class ExpedienteClinico extends BaseEntity {
   @ManyToOne(() => Usuario)
   @JoinColumn({ name: 'updated_by' })
   updatedByUser: Usuario;
+
+  @OneToMany(() => HistorialClinico, (historial) => historial.expediente)
+  historiales: HistorialClinico[];  
 }

@@ -1,8 +1,13 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, JoinColumn, OneToMany, OneToOne } from 'typeorm';
 import { BaseEntity } from '../../../../infraestructura/database/base.entity';
 import { ExpedienteClinico } from '../../expediente_clinico/entities/expediente_clinico.entity';
 import { Usuario } from '../../../identidad/usuarios/entities/usuario.entity';
 import { Cita } from '../../citas/entities/cita.entity';
+import { Receta } from '../../recetas/entities/receta.entity';
+import { VacunaAplicada } from '../../vacunas_aplicadas/entities/vacunas_aplicada.entity';
+// 👇 NUEVAS IMPORTACIONES
+import { Hospitalizacion } from '../../hospitalizaciones/entities/hospitalizacione.entity';
+import { ArchivoAdjunto } from '../../archivos_adjuntos/entities/archivos_adjunto.entity';
 
 @Entity('historial_clinico')
 export class HistorialClinico extends BaseEntity {
@@ -12,7 +17,7 @@ export class HistorialClinico extends BaseEntity {
   @Column({ name: 'id_veterinario_fk', type: 'uuid' })
   id_veterinario_fk: string;
 
-  @Column({ name: 'id_cita_fk', type: 'uuid', nullable: true })
+  @Column({ name: 'id_cita_fk', type: 'uuid', nullable: true, unique: true })
   id_cita_fk: string;
 
   @Column({ name: 'fecha_consulta', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
@@ -58,7 +63,7 @@ export class HistorialClinico extends BaseEntity {
   updatedBy: string;
 
   // 🔗 LLAVES FORÁNEAS
-  @ManyToOne(() => ExpedienteClinico)
+  @ManyToOne(() => ExpedienteClinico, (expediente) => expediente.historiales)
   @JoinColumn({ name: 'id_expediente_fk' })
   expediente: ExpedienteClinico;
 
@@ -77,4 +82,17 @@ export class HistorialClinico extends BaseEntity {
   @ManyToOne(() => Usuario)
   @JoinColumn({ name: 'updated_by' })
   updatedByUser: Usuario;
+
+  @OneToMany(() => Receta, (receta) => receta.historial)
+  recetas: Receta[];
+
+  @OneToMany(() => VacunaAplicada, (vacunaAplicada) => vacunaAplicada.historial)
+  vacunasAplicadas: VacunaAplicada[];
+
+  // 👇 RELACIONES INVERSAS AÑADIDAS PARA EL EXPEDIENTE
+  @OneToOne(() => Hospitalizacion, (hospitalizacion) => hospitalizacion.historial)
+  hospitalizacion: Hospitalizacion;
+
+  @OneToMany(() => ArchivoAdjunto, (archivo) => archivo.historialClinico)
+  archivosAdjuntos: ArchivoAdjunto[];
 }

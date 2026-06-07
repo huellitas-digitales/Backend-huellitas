@@ -1,30 +1,31 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { HistorialClinicoResponseDto } from '../../historial_clinico/dto/historial-clinico-response.dto';
+
+export class ExpedienteMascotaResponseDto {
+  @ApiProperty()
+  id: string;
+
+  @ApiProperty()
+  nombre: string;
+
+  @ApiProperty()
+  sexo: string;
+}
 
 export class ExpedienteClinicoResponseDto {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
-  id_mascota_fk: string;
-
-  @ApiProperty()
   fecha_apertura: Date;
 
-  @ApiProperty()
-  notas_generales: string;
+  @ApiProperty({ required: false })
+  notas_generales?: string;
 
-  @ApiProperty()
-  createdAt: Date;
+  @ApiProperty({ type: ExpedienteMascotaResponseDto, required: false })
+  mascota?: ExpedienteMascotaResponseDto;
 
-  @ApiProperty()
-  updatedAt: Date;
-
-  @ApiProperty()
-  deletedAt: Date;
-
-  @ApiProperty()
-  createdBy: string;
-
-  @ApiProperty()
-  updatedBy: string;
+  @ApiProperty({ type: [HistorialClinicoResponseDto], required: false })
+  historiales?: HistorialClinicoResponseDto[];
 }
+

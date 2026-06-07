@@ -1,5 +1,5 @@
 // src/modules/clinica/historial_clinico/dto/create-historial.dto.ts
-import { IsUUID, IsNumber, IsString, IsOptional, Min, MaxLength, IsNotEmpty } from 'class-validator';
+import { IsUUID, IsNumber, IsString, IsOptional, Min, MaxLength, IsNotEmpty, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateHistorialClinicoDto {
@@ -28,6 +28,32 @@ export class CreateHistorialClinicoDto {
   @IsString()
   @IsOptional()
   notas_internas?: string;
+
+  @ApiProperty({ example: 38.5, description: 'Temperatura en grados Celsius' })
+  @IsNumber()
+  @IsOptional()
+  temperatura_c?: number;
+
+  @ApiProperty({ example: 120, description: 'Frecuencia cardíaca en latidos por minuto' })
+  @IsNumber()
+  @IsOptional()
+  frecuencia_cardiaca?: number;
+
+  @ApiProperty({ example: 24, description: 'Frecuencia respiratoria en respiraciones por minuto' })
+  @IsNumber()
+  @IsOptional()
+  frecuencia_respiratoria?: number;
+
+  @ApiProperty({ example: 'Consulta', description: 'Tipo de atención' })
+  @IsString()
+  @IsOptional()
+  @IsIn(['Consulta', 'Emergencia', 'Control', 'Cirugia', 'Hospitalizacion'])
+  @MaxLength(20)
+  tipo_atencion?: string;
+
+  @ApiProperty({ example: true, description: 'Indica si se completó el triaje' })
+  @IsOptional()
+  triaje_completado?: boolean;
 
   // 👇 ¡LA ÚNICA LLAVE FORÁNEA NECESARIA Y ES OBLIGATORIA!
   @ApiProperty({ example: 'uuid-cita' })
