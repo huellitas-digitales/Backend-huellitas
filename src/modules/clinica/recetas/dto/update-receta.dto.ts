@@ -1,4 +1,10 @@
-import { PartialType } from '@nestjs/swagger';
-import { CreateRecetaDto } from './create-receta.dto';
+// src/modules/clinica/recetas/dto/update-receta.dto.ts
+import { ApiProperty } from '@nestjs/swagger';
+import { IsString, IsOptional } from 'class-validator';
 
-export class UpdateRecetaDto extends PartialType(CreateRecetaDto) {}
+export class UpdateRecetaDto {
+  @ApiProperty({ required: false })
+  @IsString()
+  @IsOptional()
+  indicaciones_grales?: string;
+}

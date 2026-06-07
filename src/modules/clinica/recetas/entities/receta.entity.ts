@@ -1,15 +1,17 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+// src/modules/clinica/recetas/entities/receta.entity.ts
+import { Entity, Column, ManyToOne, JoinColumn, OneToMany } from 'typeorm';
 import { BaseEntity } from '../../../../infraestructura/database/base.entity';
 import { HistorialClinico } from '../../historial_clinico/entities/historial_clinico.entity';
 import { Usuario } from '../../../identidad/usuarios/entities/usuario.entity';
+import { DetallesReceta } from '../../detalles_receta/entities/detalles_receta.entity';
 
 @Entity('recetas')
 export class Receta extends BaseEntity {
   @Column({ name: 'id_historial_fk', type: 'uuid' })
-  id_historial_fk: string;
+  idHistorialFk: string;
 
   @Column({ name: 'id_veterinario_fk', type: 'uuid' })
-  id_veterinario_fk: string;
+  idVeterinarioFk: string;
 
   @Column({ name: 'indicaciones_grales', type: 'text', nullable: true })
   indicacionesGrales: string;
@@ -20,7 +22,7 @@ export class Receta extends BaseEntity {
   @Column({ name: 'updated_by', type: 'uuid', nullable: true })
   updatedBy: string;
 
-  // 🔗 LLAVES FORÁNEAS
+  // Relaciones
   @ManyToOne(() => HistorialClinico)
   @JoinColumn({ name: 'id_historial_fk' })
   historial: HistorialClinico;
@@ -36,4 +38,7 @@ export class Receta extends BaseEntity {
   @ManyToOne(() => Usuario)
   @JoinColumn({ name: 'updated_by' })
   updatedByUser: Usuario;
+
+  @OneToMany(() => DetallesReceta, (detalle) => detalle.receta)
+  detalles: DetallesReceta[];
 }

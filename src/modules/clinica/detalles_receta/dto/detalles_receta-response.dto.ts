@@ -1,17 +1,19 @@
 import { ApiProperty } from '@nestjs/swagger';
 
-export class DetallesRecetaResponseDto {
+export class DetalleProductoResponseDto {
   @ApiProperty()
   id: string;
 
   @ApiProperty()
-  id_receta_fk: string;
+  nombre: string;
+}
 
+export class DetallesRecetaResponseDto {
   @ApiProperty()
-  id_producto_fk: string;
+  id: string;
 
-  @ApiProperty()
-  medicamento_texto: string;
+  @ApiProperty({ required: false })
+  medicamento_texto?: string;
 
   @ApiProperty()
   dosis: string;
@@ -19,15 +21,10 @@ export class DetallesRecetaResponseDto {
   @ApiProperty()
   frecuencia: string;
 
-  @ApiProperty()
-  duracion_dias: number;
+  @ApiProperty({ required: false })
+  duracion_dias?: number;
 
-  @ApiProperty()
-  createdAt: Date;
-
-  @ApiProperty()
-  updatedAt: Date;
-
-  @ApiProperty()
-  createdBy: string;
+  @ApiProperty({ type: DetalleProductoResponseDto, required: false })
+  producto?: DetalleProductoResponseDto;
 }
+

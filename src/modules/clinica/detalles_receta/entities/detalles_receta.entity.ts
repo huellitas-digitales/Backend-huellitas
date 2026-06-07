@@ -1,3 +1,4 @@
+// src/modules/clinica/detalles_receta/entities/detalles_receta.entity.ts
 import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
 import { BaseEntity } from '../../../../infraestructura/database/base.entity';
 import { Receta } from '../../recetas/entities/receta.entity';
@@ -5,24 +6,24 @@ import { Producto } from '../../../inventario/productos/entities/producto.entity
 import { Usuario } from '../../../identidad/usuarios/entities/usuario.entity';
 
 @Entity('detalles_receta')
-export class DetalleReceta extends BaseEntity {
+export class DetallesReceta extends BaseEntity {
   @Column({ name: 'id_receta_fk', type: 'uuid' })
-  id_receta_fk: string;
+  idRecetaFk: string;
 
-  @Column({ name: 'id_producto_fk', type: 'uuid' })
-  id_producto_fk: string;
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  dosis: string;
-
-  @Column({ type: 'varchar', length: 100, nullable: true })
-  frecuencia: string;
-
-  @Column({ name: 'duracion_dias', type: 'integer', nullable: true })
-  duracionDias: number;
+  @Column({ name: 'id_producto_fk', type: 'uuid', nullable: true })
+  idProductoFk: string | null;
 
   @Column({ name: 'medicamento_texto', type: 'varchar', length: 150, nullable: true })
   medicamentoTexto: string;
+
+  @Column({ name: 'dosis', type: 'varchar', length: 100 })
+  dosis: string;
+
+  @Column({ name: 'frecuencia', type: 'varchar', length: 100 })
+  frecuencia: string;
+
+  @Column({ name: 'duracion_dias', type: 'int', nullable: true })
+  duracionDias: number;
 
   @Column({ name: 'created_by', type: 'uuid', nullable: false })
   createdBy: string;
@@ -30,8 +31,8 @@ export class DetalleReceta extends BaseEntity {
   @Column({ name: 'updated_by', type: 'uuid', nullable: true })
   updatedBy: string;
 
-  // 🔗 LLAVES FORÁNEAS
-  @ManyToOne(() => Receta)
+  // Relaciones
+  @ManyToOne(() => Receta, (receta) => receta.detalles)
   @JoinColumn({ name: 'id_receta_fk' })
   receta: Receta;
 
