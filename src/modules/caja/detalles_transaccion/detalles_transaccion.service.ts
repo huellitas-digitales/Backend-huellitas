@@ -1,26 +1,42 @@
-import { Injectable } from '@nestjs/common';
-import { CreateDetallesTransaccionDto } from './dto/create-detalles_transaccion.dto';
-import { UpdateDetallesTransaccionDto } from './dto/update-detalles_transaccion.dto';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { DetalleTransaccion } from './entities/detalles_transaccion.entity';
 
 @Injectable()
 export class DetallesTransaccionService {
-  create(createDetallesTransaccionDto: CreateDetallesTransaccionDto) {
-    return 'This action adds a new detallesTransaccion';
+  constructor(
+    @InjectRepository(DetalleTransaccion)
+    private readonly detalleRepo: Repository<DetalleTransaccion>,
+  ) {}
+
+  findAll(): Promise<DetalleTransaccion[]> {
+    return this.detalleRepo.find({
+      relations: ['transaccion', 'producto', 'servicio', 'receta', 'lote'],
+      order: { createdAt: 'DESC' },
+    });
   }
 
-  findAll() {
-    return `This action returns all detallesTransaccion`;
+  async findOne(id: string): Promise<DetalleTransaccion> {
+    const detalle = await this.detalleRepo.findOne({
+      where: { id },
+      relations: ['transaccion', 'producto', 'servicio', 'receta', 'lote'],
+    });
+    if (!detalle) {
+      throw new NotFoundException('El detalle de transaccion no existe.');
+    }
+    return detalle;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} detallesTransaccion`;
+  create(): never {
+    throw new BadRequestException('Los detalles se crean desde el punto de venta para mantener atomicidad.');
   }
 
-  update(id: number, updateDetallesTransaccionDto: UpdateDetallesTransaccionDto) {
-    return `This action updates a #${id} detallesTransaccion`;
+  update(): never {
+    throw new BadRequestException('Los detalles de transaccion son inmutables.');
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} detallesTransaccion`;
+  remove(): never {
+    throw new BadRequestException('Los detalles de transaccion no se eliminan.');
   }
 }

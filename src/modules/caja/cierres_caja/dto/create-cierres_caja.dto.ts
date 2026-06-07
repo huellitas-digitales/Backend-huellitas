@@ -1,4 +1,4 @@
-import { IsUUID, IsDateString, IsInt, IsNumber, IsString, IsOptional } from 'class-validator';
+import { IsUUID, IsDateString, IsInt, IsNumber, IsString, IsOptional, IsIn } from 'class-validator';
 import { ApiProperty } from '@nestjs/swagger';
 
 export class CreateCierresCajaDto {
@@ -10,8 +10,9 @@ export class CreateCierresCajaDto {
   @IsDateString()
   fecha_turno: string;
 
-  @ApiProperty({ example: 'Completo' })
+  @ApiProperty({ example: 'Completo', enum: ['Mañana', 'Tarde', 'Noche', 'Completo'] })
   @IsString()
+  @IsIn(['Mañana', 'Tarde', 'Noche', 'Completo'])
   turno: string;
 
   @ApiProperty({ example: 5 })

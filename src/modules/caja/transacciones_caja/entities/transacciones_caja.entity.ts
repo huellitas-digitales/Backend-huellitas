@@ -1,8 +1,9 @@
-import { Entity, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, Column, ManyToOne, OneToMany, JoinColumn } from 'typeorm';
 import { BaseEntity } from '../../../../infraestructura/database/base.entity';
 import { Usuario } from '../../../identidad/usuarios/entities/usuario.entity';
 import { HistorialClinico } from '../../../clinica/historial_clinico/entities/historial_clinico.entity';
 import { Hospitalizacion } from '../../../clinica/hospitalizaciones/entities/hospitalizacione.entity';
+import { DetalleTransaccion } from '../../detalles_transaccion/entities/detalles_transaccion.entity';
 
 @Entity('transacciones_caja')
 export class TransaccionCaja extends BaseEntity {
@@ -10,13 +11,13 @@ export class TransaccionCaja extends BaseEntity {
   id_cajero_fk: string;
 
   @Column({ name: 'id_cliente_fk', type: 'uuid', nullable: true })
-  id_cliente_fk: string;
+  id_cliente_fk: string | null;
 
   @Column({ name: 'id_historial_fk', type: 'uuid', nullable: true })
-  id_historial_fk: string;
+  id_historial_fk: string | null;
 
   @Column({ name: 'id_hospitalizacion_fk', type: 'uuid', nullable: true })
-  id_hospitalizacion_fk: string;
+  id_hospitalizacion_fk: string | null;
 
   @Column({ name: 'fecha_transaccion', type: 'timestamp', default: () => 'CURRENT_TIMESTAMP' })
   fechaTransaccion: Date;
@@ -35,6 +36,9 @@ export class TransaccionCaja extends BaseEntity {
 
   @Column({ name: 'estado_transaccion', type: 'varchar', length: 20, default: 'Completada' })
   estadoTransaccion: string;
+
+  @Column({ name: 'turno', type: 'varchar', length: 10, nullable: true })
+  turno: string | null;
 
   @Column({ name: 'created_by', type: 'uuid', nullable: false })
   createdBy: string;
@@ -58,6 +62,9 @@ export class TransaccionCaja extends BaseEntity {
   @ManyToOne(() => Hospitalizacion)
   @JoinColumn({ name: 'id_hospitalizacion_fk' })
   hospitalizacion: Hospitalizacion;
+
+  @OneToMany(() => DetalleTransaccion, (d) => d.transaccion)
+  detalles: DetalleTransaccion[];
 
   @ManyToOne(() => Usuario)
   @JoinColumn({ name: 'created_by' })

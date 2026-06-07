@@ -5,6 +5,7 @@ import { Producto } from '../../../inventario/productos/entities/producto.entity
 import { Servicio } from '../../../core/servicios/entities/servicio.entity';
 import { Receta } from '../../../clinica/recetas/entities/receta.entity';
 import { Usuario } from '../../../identidad/usuarios/entities/usuario.entity';
+import { LoteCaducidad } from '../../../inventario/lotes_caducidad/entities/lotes_caducidad.entity';
 
 @Entity('detalles_transaccion')
 export class DetalleTransaccion extends BaseEntity {
@@ -12,13 +13,16 @@ export class DetalleTransaccion extends BaseEntity {
   id_transaccion_fk: string;
 
   @Column({ name: 'id_producto_fk', type: 'uuid', nullable: true })
-  id_producto_fk: string;
+  id_producto_fk: string | null;
 
   @Column({ name: 'id_servicio_fk', type: 'integer', nullable: true })
-  id_servicio_fk: number;
+  id_servicio_fk: number | null;
 
   @Column({ name: 'id_receta_fk', type: 'uuid', nullable: true })
-  id_receta_fk: string;
+  id_receta_fk: string | null;
+
+  @Column({ name: 'id_lote_fk', type: 'uuid', nullable: true })
+  id_lote_fk: string | null;
 
   @Column({ type: 'integer' })
   cantidad: number;
@@ -54,6 +58,10 @@ export class DetalleTransaccion extends BaseEntity {
   @ManyToOne(() => Receta)
   @JoinColumn({ name: 'id_receta_fk' })
   receta: Receta;
+
+  @ManyToOne(() => LoteCaducidad, { nullable: true })
+  @JoinColumn({ name: 'id_lote_fk' })
+  lote: LoteCaducidad;
 
   @ManyToOne(() => Usuario)
   @JoinColumn({ name: 'created_by' })
