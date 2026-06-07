@@ -6,13 +6,21 @@ export class UsuarioResponseDto {
   apellidos: string;
   email: string;
   telefono: string;
+  avatar_url: string | null;
   id_rol_fk: number;
   estado_cuenta: boolean;
+  intentos_fallidos: number;
+  bloqueado_hasta: Date | null;
   created_at: Date;
   updated_at: Date;
-  created_by: string;
+  deletedAt: Date | null;
+  created_by: string | null;
+  rol?: {
+    id: number;
+    nombre: string;
+    descripcion?: string;
+  };
 
-  // 👇 Aquí está el método real, ¡asegúrate de que no tenga el throw new Error!
   static fromEntity(entity: Usuario): UsuarioResponseDto {
     const dto = new UsuarioResponseDto();
     dto.id = entity.id;
@@ -20,11 +28,22 @@ export class UsuarioResponseDto {
     dto.apellidos = entity.apellidos;
     dto.email = entity.email;
     dto.telefono = entity.telefono;
+    dto.avatar_url = entity.avatar_url ?? null;
     dto.id_rol_fk = entity.id_rol_fk;
     dto.estado_cuenta = entity.estado_cuenta;
+    dto.intentos_fallidos = entity.intentos_fallidos ?? 0;
+    dto.bloqueado_hasta = entity.bloqueado_hasta ?? null;
     dto.created_at = entity.createdAt;
     dto.updated_at = entity.updatedAt;
-    dto.created_by = entity.creador?.id;
+    dto.deletedAt = (entity as any).deletedAt ?? null;
+    dto.created_by = entity.created_by ?? entity.creador?.id ?? null;
+    
+    dto.rol = entity.rol ? {
+      id: entity.rol.id,
+      nombre: entity.rol.nombre,
+      descripcion: entity.rol.descripcion,
+    } : undefined;
+
     return dto;
   }
 

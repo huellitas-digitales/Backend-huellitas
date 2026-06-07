@@ -1,6 +1,6 @@
 import { Injectable, ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Not } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { Usuario } from './entities/usuario.entity';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
@@ -58,6 +58,40 @@ export class UsuariosService extends BaseCrudService<Usuario> {
       .getOne();
   }
 
+  async findByIdForAuth(id: string): Promise<Usuario | null> {
+    return await this.usuarioRepository.createQueryBuilder('usuario')
+      .addSelect('usuario.password_hash')
+      .leftJoinAndSelect('usuario.rol', 'rol')
+      .where('usuario.id = :id', { id })
+      .getOne();
+  }
+
+  async registrarLoginFallido(usuario: Usuario): Promise<void> {
+    const intentos = Number(usuario.intentos_fallidos ?? 0) + 1;
+    usuario.intentos_fallidos = intentos;
+    if (intentos >= 3) {
+      usuario.bloqueado_hasta = new Date(Date.now() + 15 * 60 * 1000);
+      usuario.estado_cuenta = false;
+    }
+    await this.usuarioRepository.save(usuario);
+  }
+
+  async registrarLoginExitoso(usuario: Usuario): Promise<void> {
+    if (usuario.intentos_fallidos !== 0 || usuario.bloqueado_hasta) {
+      usuario.intentos_fallidos = 0;
+      usuario.bloqueado_hasta = null;
+      usuario.estado_cuenta = true;
+      await this.usuarioRepository.save(usuario);
+    }
+  }
+
+  async resetearIntentosFallidos(usuario: Usuario): Promise<void> {
+    usuario.intentos_fallidos = 0;
+    usuario.bloqueado_hasta = null;
+    usuario.estado_cuenta = true;
+    await this.usuarioRepository.save(usuario);
+  }
+
   /**
    * Búsqueda por ID con retorno de DTO
    */
@@ -67,12 +101,53 @@ export class UsuariosService extends BaseCrudService<Usuario> {
   }
 
   /**
-   * Listado general con retorno de DTOs
+   * Listado general con retorno de DTOs incluyendo eliminados lógicamente
    */
-async findAllClean(): Promise<UsuarioResponseDto[]> {
-    const usuarios = await this.usuarioRepository.find();
-    // 👇 Aquí está la magia: fromEntities en plural
-    return UsuarioResponseDto.fromEntities(usuarios); 
+  async findAllClean(): Promise<UsuarioResponseDto[]> {
+    const usuarios = await this.usuarioRepository.find({ relations: ['rol'], withDeleted: true });
+    return UsuarioResponseDto.fromEntities(usuarios);
+  }
+
+  /**
+   * Retorna veterinarios activos con datos públicos (sin info sensible)
+   */
+  async findVeterinariosPublico(): Promise<any[]> {
+    const vets = await this.usuarioRepository.find({
+      where: { id_rol_fk: 2, estado_cuenta: true },
+      relations: ['rol'],
+    });
+
+    return vets.map(v => ({
+      id:          v.id,
+      nombres:     v.nombres,
+      apellidos:   v.apellidos,
+      avatar_url:  (v as any).avatar_url ?? null,
+      rol:         'Veterinario',
+    }));
+  }
+
+  /**
+   * Retorna los usuarios de tipo Cliente (rol 4) incluyendo eliminados lógicamente
+   */
+  async findClientes(): Promise<UsuarioResponseDto[]> {
+    const usuarios = await this.usuarioRepository.find({
+      where: { id_rol_fk: 4 },
+      relations: ['rol'],
+      withDeleted: true
+    });
+    return UsuarioResponseDto.fromEntities(usuarios);
+  }
+
+  /**
+   * Retorna los usuarios de personal (cualquier rol distinto de 4) incluyendo eliminados lógicamente
+   */
+  async findPersonal(): Promise<UsuarioResponseDto[]> {
+    const usuarios = await this.usuarioRepository.find({
+      where: { id_rol_fk: Not(4) },
+      relations: ['rol'],
+      withDeleted: true
+    });
+    return UsuarioResponseDto.fromEntities(usuarios);
   }
   /**
    * Suspensión lógica de cuenta

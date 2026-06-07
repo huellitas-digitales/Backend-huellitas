@@ -33,4 +33,19 @@ export class CreateMascotaDto {
   @IsInt()
   @IsOptional()
   id_raza_fk?: number;
+
+  @ApiProperty({ example: 'https://storage.huellitas.net/fotos/luna.jpg', required: false })
+  @IsString()
+  @IsOptional()
+  foto_url?: string;
+
+  @ApiProperty({ example: 'Pelaje dorado, collar rojo, mancha blanca en el pecho', required: false })
+  @IsString()
+  @IsOptional()
+  caracteristicas_fisicas?: string;
+
+  @ApiProperty({ example: '70012345', required: false })
+  @IsString()
+  @IsOptional()
+  contacto_emergencia_telefono?: string;
 }

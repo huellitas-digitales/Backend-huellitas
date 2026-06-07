@@ -17,7 +17,7 @@ export class Mascota extends BaseEntity {
   @Column({ type: 'boolean', default: false })
   esterilizado: boolean;
 
-@Column({ name: 'hash_qr_identidad', type: 'varchar', length: 50, unique: true, nullable: true })
+  @Column({ name: 'hash_qr_identidad', type: 'varchar', length: 255, unique: true })
   hash_qr_identidad: string;
 
   @Column({ type: 'uuid', nullable: true })
@@ -31,6 +31,36 @@ export class Mascota extends BaseEntity {
 
   @Column({ name: 'url_perfil_publico', type: 'varchar', length: 500, nullable: true })
   url_perfil_publico: string;
+
+  @Column({ name: 'foto_url', type: 'varchar', length: 500, nullable: true })
+  foto_url: string | null;
+
+  @Column({ name: 'caracteristicas_fisicas', type: 'text', nullable: true })
+  caracteristicas_fisicas: string | null;
+
+  @Column({ name: 'contacto_emergencia_telefono', type: 'varchar', length: 20, nullable: true })
+  contacto_emergencia_telefono: string | null;
+
+  @Column({ name: 'punto_entrega_nombre', type: 'varchar', length: 200, nullable: true })
+  punto_entrega_nombre: string | null;
+
+  @Column({ name: 'punto_entrega_direccion', type: 'varchar', length: 300, nullable: true })
+  punto_entrega_direccion: string | null;
+
+  @Column({ name: 'punto_entrega_referencia', type: 'varchar', length: 300, nullable: true })
+  punto_entrega_referencia: string | null;
+
+  @Column({ name: 'punto_entrega_lat', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  punto_entrega_lat: number | null;
+
+  @Column({ name: 'punto_entrega_lng', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  punto_entrega_lng: number | null;
+
+  @Column({ name: 'recompensa', type: 'boolean', default: false })
+  recompensa: boolean;
+
+  @Column({ name: 'mensaje_encontrador', type: 'varchar', length: 500, nullable: true })
+  mensaje_encontrador: string | null;
 
   @Column({ name: 'created_by', type: 'uuid', nullable: false })
   createdBy: string;

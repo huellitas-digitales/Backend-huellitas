@@ -33,8 +33,20 @@ export class CreateUsuarioDto {
   @MaxLength(20)
   telefono?: string;
 
+  @ApiProperty({ example: 'https://res.cloudinary.com/...', required: false })
+  @IsString()
+  @IsOptional()
+  @MaxLength(500)
+  avatar_url?: string;
+
   @ApiProperty({ example: 4, description: 'ID del rol (1:Admin, 2:Vet, 3:Cajero, 4:Cliente)' })
   @IsInt()
   @IsPositive()
   id_rol_fk: number;
+
+  @ApiProperty({ example: 'VET-2024-00123', required: false })
+  @IsString()
+  @IsOptional()
+  @MaxLength(50)
+  numero_matricula?: string;
 }
