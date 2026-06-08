@@ -91,7 +91,7 @@ export class AuthService {
           <div style="font-size:36px;font-weight:900;letter-spacing:12px;color:#0ea5e9;text-align:center;padding:20px 0">${codigo}</div>
           <p style="margin:20px 0 0;font-size:12px;color:#9ca3af">Si no fuiste tú, ignora este correo. Tu cuenta sigue segura.</p>
         `,
-      ).catch((err) => console.error('Error enviando OTP email:', err));
+      ).catch((err) => console.error('Error enviando OTP email:', err?.message ?? err));
 
       await this.logsService.registrar({
         usuarioId: usuario.id,
