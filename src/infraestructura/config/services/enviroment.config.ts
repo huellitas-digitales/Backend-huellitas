@@ -2,7 +2,7 @@ import { EnviromentEnum } from 'src/compartido/enums/enviroment.enum';
 
 export const environmentConfig = {
   [EnviromentEnum.PRODUCTION]: {
-    logger: ['error'],
+    logger: ['error', 'warn'],
     swagger: false,
   },
   [EnviromentEnum.DEVELOPMENT]: {

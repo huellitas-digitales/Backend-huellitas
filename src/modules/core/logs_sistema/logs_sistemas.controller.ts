@@ -1,16 +1,15 @@
 import { Controller, Get, Param, Query, UseGuards } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiQuery, ApiParam, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { LogsSistemaService } from './logs_sistema.service';
-
-// import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
-// import { RolesGuard } from '../auth/guards/roles.guard';
-// import { Roles } from '../auth/decorators/roles.decorator';
+import { JwtAuthGuard } from '../../identidad/auth/guards/jwt.guard';
+import { RolesGuard } from '../../identidad/auth/guards/roles.guard';
+import { Roles } from '../../identidad/auth/decorators/roles.decorator';
 
 @ApiTags('Logs del Sistema (Auditoría)')
-@ApiBearerAuth() // Muestra el candadito en Swagger para pedir el Token JWT
+@ApiBearerAuth('access-token')
+@UseGuards(JwtAuthGuard, RolesGuard)
+@Roles('Administrador')
 @Controller('logs-sistema')
-// @UseGuards(JwtAuthGuard, RolesGuard)
-// @Roles('Administrador', 'Veterinario', 'Cajero', 'Cliente')
 export class LogsSistemaController {
   constructor(private readonly logsService: LogsSistemaService) {}
 

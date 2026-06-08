@@ -6,12 +6,14 @@ import { Usuario } from './entities/usuario.entity';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UsuarioResponseDto } from './dto/usuarios-response.dto';
 import { BaseCrudService } from '../../../compartido/utils/base-crud.service';
+import { LogsSistemaService } from '../../core/logs_sistema/logs_sistema.service';
 
 @Injectable()
 export class UsuariosService extends BaseCrudService<Usuario> {
   constructor(
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
+    private readonly logsService: LogsSistemaService,
   ) {
     super(usuarioRepository, 'Usuario');
   }
@@ -41,7 +43,16 @@ export class UsuariosService extends BaseCrudService<Usuario> {
     });
 
     const usuarioGuardado = await this.usuarioRepository.save(nuevoUsuario);
-    
+
+    await this.logsService.registrar({
+      usuarioId: creatorId,
+      accion: 'USUARIO_CREADO',
+      categoria: 'SISTEMA',
+      tablaAfectada: 'usuarios',
+      registroId: usuarioGuardado.id,
+      detalles: { email: usuarioGuardado.email, id_rol_fk: usuarioGuardado.id_rol_fk },
+    });
+
     // 5. Devolvemos el DTO limpio
     return UsuarioResponseDto.fromEntity(usuarioGuardado);
   }
@@ -156,10 +167,19 @@ export class UsuariosService extends BaseCrudService<Usuario> {
     const usuario = await this.findOne(id);
     usuario.estado_cuenta = false;
     usuario.updated_by = adminId;
-    
+
     const actualizado = await this.usuarioRepository.save(usuario);
     await this.usuarioRepository.softRemove(actualizado);
-    
+
+    await this.logsService.registrar({
+      usuarioId: adminId,
+      accion: 'USUARIO_SUSPENDIDO',
+      categoria: 'SISTEMA',
+      tablaAfectada: 'usuarios',
+      registroId: id,
+      detalles: { email: usuario.email },
+    });
+
     return UsuarioResponseDto.fromEntity(actualizado);
   }
 }

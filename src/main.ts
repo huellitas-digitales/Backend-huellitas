@@ -1,6 +1,8 @@
-import { NestFactory, Reflector } from '@nestjs/core'; // 👈 Se agregó Reflector
+import { NestFactory, Reflector } from '@nestjs/core';
 import { AppModule } from './app.module';
-import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common'; // 👈 Se agregó ClassSerializerInterceptor
+import { ValidationPipe, ClassSerializerInterceptor } from '@nestjs/common';
+import helmet from 'helmet';
+import { json, urlencoded } from 'express';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { MyServerConfig } from './infraestructura/config/services/server.config';
 import { EnviromentEnum } from './compartido/enums/enviroment.enum';
@@ -15,6 +17,9 @@ async function bootstrap() {
     });
     const myServer = app.get(MyServerConfig).get();
 
+    app.use(helmet());
+    app.use(json({ limit: '5mb' }));
+    app.use(urlencoded({ extended: true, limit: '5mb' }));
     app.setGlobalPrefix('api/huellitas');
 
     if (config.swagger) {

@@ -38,8 +38,8 @@ export class ExpedienteClinicoController {
   }
 
   @Get()
-  @Roles('Administrador', 'Veterinario', 'Cajero', 'Cliente')
-  @ApiOperation({ summary: 'Listar todos los expedientes (Vista Administrativa)' })
+  @Roles('Administrador', 'Veterinario', 'Cajero')
+  @ApiOperation({ summary: 'Listar todos los expedientes (Vista Administrativa — sin acceso para Cliente)' })
   @ApiResponse({ status: 200, description: 'Lista de expedientes.', type: [ExpedienteClinicoResponseDto] })
   findAll(): Promise<ExpedienteClinicoResponseDto[]> {
     return this.expedienteService.findAll();
