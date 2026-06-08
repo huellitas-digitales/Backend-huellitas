@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -13,6 +13,8 @@ const ROLES_CON_OTP = ['Administrador', 'Veterinario'];
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly usuariosService: UsuariosService,
     private readonly jwtService: JwtService,
@@ -91,7 +93,7 @@ export class AuthService {
           <div style="font-size:36px;font-weight:900;letter-spacing:12px;color:#0ea5e9;text-align:center;padding:20px 0">${codigo}</div>
           <p style="margin:20px 0 0;font-size:12px;color:#9ca3af">Si no fuiste tú, ignora este correo. Tu cuenta sigue segura.</p>
         `,
-      ).catch((err) => console.error('Error enviando OTP email:', err?.message ?? err));
+      ).catch((err) => this.logger.error(`Error enviando OTP email: ${err?.message ?? err}`));
 
       await this.logsService.registrar({
         usuarioId: usuario.id,
