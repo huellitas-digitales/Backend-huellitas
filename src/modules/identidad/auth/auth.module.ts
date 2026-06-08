@@ -7,6 +7,7 @@ import { UsuariosModule } from '../usuarios/usuarios.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 // Tu infraestructura
 import { MyConfigModule } from '../../../infraestructura/config/config.module';
@@ -38,7 +39,7 @@ import { LogsSistemaModule } from '../../core/logs_sistema/logs_sistema.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [JwtModule, PassportModule, JwtStrategy],
+  providers: [AuthService, JwtStrategy, TokenBlacklistService],
+  exports: [JwtModule, PassportModule, JwtStrategy, TokenBlacklistService],
 })
 export class AuthModule {}

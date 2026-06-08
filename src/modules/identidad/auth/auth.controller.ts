@@ -3,11 +3,15 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from './guards/jwt.guard';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 @ApiTags('Autenticación')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly blacklist: TokenBlacklistService,
+  ) {}
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
@@ -16,6 +20,19 @@ export class AuthController {
   @ApiResponse({ status: 401, description: 'Credenciales inválidas.' })
   login(@Body() loginDto: LoginDto) {
     return this.authService.login(loginDto);
+  }
+
+  @Post('logout')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth('access-token')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Cerrar sesión e invalidar el token JWT' })
+  @ApiResponse({ status: 200, description: 'Sesión cerrada correctamente.' })
+  logout(@Req() req: any) {
+    const authHeader: string = req.headers['authorization'] ?? '';
+    const token = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (token) this.blacklist.revoke(token);
+    return { message: 'Sesión cerrada correctamente.' };
   }
 
   @Post('verificar-password')
