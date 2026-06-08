@@ -36,6 +36,12 @@ export class Usuario extends BaseEntity {
   @Column({ name: 'bloqueado_hasta', type: 'timestamp', nullable: true })
   bloqueado_hasta: Date | null;
 
+  @Column({ name: 'otp_codigo', type: 'varchar', length: 6, nullable: true })
+  otp_codigo: string | null;
+
+  @Column({ name: 'otp_expira_en', type: 'timestamp', nullable: true })
+  otp_expira_en: Date | null;
+
   @Column({ type: 'int' })
   id_rol_fk: number;
 

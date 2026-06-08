@@ -1,9 +1,15 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { UsuariosService } from '../usuarios/usuarios.service';
 import { LoginDto } from './dto/login.dto';
 import { LogsSistemaService } from '../../core/logs_sistema/logs_sistema.service';
+import { MensajeroService } from '../../comunicacion/mensajero/mensajero.service';
+import { Usuario } from '../usuarios/entities/usuario.entity';
+
+const ROLES_CON_OTP = ['Administrador', 'Veterinario'];
 
 @Injectable()
 export class AuthService {
@@ -11,6 +17,9 @@ export class AuthService {
     private readonly usuariosService: UsuariosService,
     private readonly jwtService: JwtService,
     private readonly logsService: LogsSistemaService,
+    private readonly mensajero: MensajeroService,
+    @InjectRepository(Usuario)
+    private readonly usuarioRepo: Repository<Usuario>,
   ) {}
 
   async login(loginDto: LoginDto) {
@@ -62,6 +71,40 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
 
+    // 3. Si es Admin o Vet → flujo OTP
+    if (ROLES_CON_OTP.includes(usuario.rol?.nombre)) {
+      const codigo = Math.floor(100000 + Math.random() * 900000).toString();
+      const expira = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
+
+      await this.usuarioRepo.update(usuario.id, {
+        otp_codigo: codigo,
+        otp_expira_en: expira,
+      });
+
+      await this.mensajero.enviarEmailDirecto(
+        usuario.email,
+        '🔐 Código de verificación — Huellitas',
+        `
+          <h2 style="margin:0 0 12px">Tu código de acceso</h2>
+          <p style="margin:0 0 20px;color:#6b7280">Ingresa este código en la pantalla de verificación. Expira en <strong>10 minutos</strong>.</p>
+          <div style="font-size:36px;font-weight:900;letter-spacing:12px;color:#0ea5e9;text-align:center;padding:20px 0">${codigo}</div>
+          <p style="margin:20px 0 0;font-size:12px;color:#9ca3af">Si no fuiste tú, ignora este correo. Tu cuenta sigue segura.</p>
+        `,
+      );
+
+      await this.logsService.registrar({
+        usuarioId: usuario.id,
+        accion: 'OTP_ENVIADO',
+        categoria: 'SEGURIDAD',
+        tablaAfectada: 'usuarios',
+        registroId: usuario.id,
+        detalles: { email },
+      });
+
+      return { requiere_otp: true, email: usuario.email };
+    }
+
+    // 4. Cliente / Cajero → JWT directo (sin OTP)
     await this.usuariosService.registrarLoginExitoso(usuario);
     await this.logsService.registrar({
       usuarioId: usuario.id,
@@ -72,21 +115,53 @@ export class AuthService {
       detalles: { email, rol: usuario.rol?.nombre },
     });
 
-    // 3. Crear el "Payload" (los datos que irán dentro del pasaporte JWT)
-    const payload = { 
-      sub: usuario.id, // 'sub' es el estándar para el ID del usuario
-      email: usuario.email, 
-      rol: usuario.rol.nombre // Ej: 'Administrador'
-    };
-
-    // 4. Limpiamos el usuario para devolverlo en la respuesta sin la contraseña
+    const payload = { sub: usuario.id, email: usuario.email, rol: usuario.rol.nombre };
     delete (usuario as any).password_hash;
 
-    // 5. Devolver el Token y los datos del usuario
     return {
       mensaje: '¡Login exitoso!',
       access_token: this.jwtService.sign(payload),
-      usuario: usuario,
+      usuario,
+    };
+  }
+
+  async verificarOtp(email: string, codigo: string) {
+    const usuario = await this.usuarioRepo.findOne({
+      where: { email },
+      relations: ['rol'],
+    });
+
+    if (!usuario) throw new UnauthorizedException('Usuario no encontrado.');
+
+    if (!usuario.otp_codigo || !usuario.otp_expira_en)
+      throw new BadRequestException('No hay un código OTP activo para este usuario.');
+
+    if (new Date() > usuario.otp_expira_en)
+      throw new UnauthorizedException('El código ha expirado. Inicia sesión nuevamente.');
+
+    if (usuario.otp_codigo !== codigo.trim())
+      throw new UnauthorizedException('Código incorrecto.');
+
+    // Limpiar OTP
+    await this.usuarioRepo.update(usuario.id, { otp_codigo: null, otp_expira_en: null });
+    await this.usuariosService.registrarLoginExitoso(usuario);
+
+    await this.logsService.registrar({
+      usuarioId: usuario.id,
+      accion: 'LOGIN_EXITOSO',
+      categoria: 'SEGURIDAD',
+      tablaAfectada: 'usuarios',
+      registroId: usuario.id,
+      detalles: { email, rol: usuario.rol?.nombre, metodo: '2FA_OTP' },
+    });
+
+    const payload = { sub: usuario.id, email: usuario.email, rol: usuario.rol.nombre };
+    delete (usuario as any).password_hash;
+
+    return {
+      mensaje: '¡Login exitoso!',
+      access_token: this.jwtService.sign(payload),
+      usuario,
     };
   }
 

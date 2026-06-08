@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
@@ -13,11 +14,15 @@ import { TokenBlacklistService } from './token-blacklist.service';
 import { MyConfigModule } from '../../../infraestructura/config/config.module';
 import { MyJwtConfig } from '../../../infraestructura/config/services/jwt.config';
 import { LogsSistemaModule } from '../../core/logs_sistema/logs_sistema.module';
+import { MensajeroModule } from '../../comunicacion/mensajero/mensajero.module';
+import { Usuario } from '../usuarios/entities/usuario.entity';
 
 @Module({
   imports: [
     UsuariosModule,
     LogsSistemaModule,
+    MensajeroModule,
+    TypeOrmModule.forFeature([Usuario]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
 
     MyConfigModule,

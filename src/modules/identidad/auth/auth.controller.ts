@@ -22,6 +22,15 @@ export class AuthController {
     return this.authService.login(loginDto);
   }
 
+  @Post('verificar-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verificar código OTP enviado al email (2FA para Admin y Vet)' })
+  @ApiResponse({ status: 200, description: 'OTP correcto — devuelve JWT.' })
+  @ApiResponse({ status: 401, description: 'Código incorrecto o expirado.' })
+  verificarOtp(@Body() body: { email: string; codigo: string }) {
+    return this.authService.verificarOtp(body.email, body.codigo);
+  }
+
   @Post('logout')
   @UseGuards(JwtAuthGuard)
   @ApiBearerAuth('access-token')
