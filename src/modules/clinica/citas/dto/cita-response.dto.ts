@@ -118,4 +118,10 @@ export class CitaResponseDto {
 
   @ApiProperty({ required: false, description: 'Fecha de eliminación lógica si fue cancelada o eliminada' })
   deletedAt?: Date;
+
+  @ApiProperty({ description: 'Fecha de creación de la cita (cuando fue agendada)' })
+  createdAt?: Date;
+
+  @ApiProperty({ description: 'Fecha de última actualización — refleja cuándo cambió de estado (ej: cuándo fue atendida)' })
+  updatedAt?: Date;
 }

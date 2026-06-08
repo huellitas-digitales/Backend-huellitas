@@ -64,6 +64,8 @@ export class CitasService {
       requiere_confirmacion: cita.requiere_confirmacion,
       motivo_cancelacion: cita.motivo_cancelacion ?? null,
       deletedAt: cita.deletedAt ?? undefined,
+      createdAt: cita.createdAt,
+      updatedAt: cita.updatedAt,
       mascota: cita.mascota ? {
         id: cita.mascota.id,
         nombre: cita.mascota.nombre,
