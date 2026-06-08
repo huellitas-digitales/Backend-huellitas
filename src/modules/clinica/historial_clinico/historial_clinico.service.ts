@@ -683,6 +683,7 @@ export class HistorialClinicoService {
         veterinario: h.veterinario
           ? `Dr(a). ${h.veterinario.nombres} ${h.veterinario.apellidos}`
           : null,
+        fecha_agendada: h.cita?.fecha_hora_inicio ?? null,
         servicio: h.cita?.servicio?.nombre ?? null,
 
         recetas: (h.recetas ?? []).map(r => ({
