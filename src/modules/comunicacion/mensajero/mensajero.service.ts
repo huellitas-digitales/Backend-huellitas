@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import Twilio from 'twilio';
 import { RegistroNotificacion } from '../registro_notificaciones/entities/registro_notificacione.entity';
 
@@ -56,24 +56,28 @@ export class MensajeroService {
     this.logger.log(`WhatsApp Twilio enviado a ${to} — SID: ${msg.sid}`);
   }
 
-  // ── Envía Email vía Nodemailer (Gmail) ───────────────────────────────────────
+  // ── Envía Email vía Resend (HTTPS — funciona en Railway) ────────────────────
   async enviarEmailDirecto(destinatario: string, asunto: string, cuerpo: string): Promise<void> {
-    const transporter = nodemailer.createTransport({
-      host: process.env.EMAIL_HOST ?? 'smtp.gmail.com',
-      port: Number(process.env.EMAIL_PORT ?? 587),
-      secure: false,
-      auth: {
-        user: process.env.EMAIL_USER,
-        pass: process.env.EMAIL_PASS,
-      },
-    });
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      this.logger.error('RESEND_API_KEY no configurada — email no enviado');
+      return;
+    }
 
-    await transporter.sendMail({
-      from: process.env.EMAIL_FROM ?? `"Huellitas Digitales" <${process.env.EMAIL_USER}>`,
+    const resend = new Resend(apiKey);
+    const from = process.env.EMAIL_FROM ?? 'Huellitas <onboarding@resend.dev>';
+
+    const { error } = await resend.emails.send({
+      from,
       to: destinatario,
       subject: asunto,
       html: this.wrapHtml(cuerpo),
     });
+
+    if (error) {
+      this.logger.error(`Resend error: ${JSON.stringify(error)}`);
+      throw new Error(error.message);
+    }
 
     this.logger.log(`Email enviado a ${destinatario}`);
   }
