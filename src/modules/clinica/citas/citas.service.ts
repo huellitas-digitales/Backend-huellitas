@@ -190,7 +190,7 @@ async create(createCitaDto: CreateCitaDto, usuarioId: string): Promise<CitaRespo
     // --- 4. DETECCIÓN DE COLISIONES (OVERLAPS) ---
     const colision = await this.citasRepository.createQueryBuilder('cita')
       .where('cita.id_veterinario_fk = :vetId', { vetId: id_veterinario_fk })
-      .andWhere('cita.estado NOT IN (:...estados)', { estados: ['Cancelada', 'No_Asistio'] })
+      .andWhere('cita.estado NOT IN (:...estados)', { estados: ['Cancelada', 'No_Asistio', 'Completada'] })
       .andWhere(`(
         cita.fecha_hora_inicio < :fechaFin 
         AND 
@@ -641,7 +641,7 @@ async create(createCitaDto: CreateCitaDto, usuarioId: string): Promise<CitaRespo
 
     const citasExistentes = await this.citasRepository.createQueryBuilder('cita')
       .where('cita.id_veterinario_fk = :vetId', { vetId: veterinarioId })
-      .andWhere('cita.estado NOT IN (:...estados)', { estados: ['Cancelada', 'No_Asistio'] })
+      .andWhere('cita.estado NOT IN (:...estados)', { estados: ['Cancelada', 'No_Asistio', 'Completada'] })
       .andWhere('cita.fecha_hora_inicio >= :inicioDia', { inicioDia })
       .andWhere('cita.fecha_hora_inicio <= :finDia', { finDia })
       .getMany();
