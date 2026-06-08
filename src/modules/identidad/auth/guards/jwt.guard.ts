@@ -6,10 +6,7 @@ import { TokenBlacklistService } from '../token-blacklist.service';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
-  constructor(
-    private reflector: Reflector,
-    private blacklist: TokenBlacklistService,
-  ) {
+  constructor(private reflector: Reflector) {
     super();
   }
 
@@ -32,12 +29,12 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       return true;
     }
 
-    // Verificar blacklist antes de validar el JWT
+    // Verificar blacklist usando método estático — sin necesidad de DI
     const request = context.switchToHttp().getRequest();
     const authHeader: string | undefined = request.headers['authorization'];
     if (authHeader?.startsWith('Bearer ')) {
       const token = authHeader.slice(7);
-      if (this.blacklist.isRevoked(token)) {
+      if (TokenBlacklistService.check(token)) {
         throw new UnauthorizedException('La sesión ha sido cerrada. Inicia sesión nuevamente.');
       }
     }

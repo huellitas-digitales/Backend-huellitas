@@ -20,4 +20,9 @@ export class TokenBlacklistService {
   isRevoked(token: string): boolean {
     return TokenBlacklistService.blacklist.has(token);
   }
+
+  /** Versión estática — usada por el guard sin necesidad de DI */
+  static check(token: string): boolean {
+    return TokenBlacklistService.blacklist.has(token);
+  }
 }
