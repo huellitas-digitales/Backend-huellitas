@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Resend } from 'resend';
+import { MailerSend, EmailParams, Sender, Recipient } from 'mailersend';
 import Twilio from 'twilio';
 import { RegistroNotificacion } from '../registro_notificaciones/entities/registro_notificacione.entity';
 
@@ -56,29 +56,25 @@ export class MensajeroService {
     this.logger.log(`WhatsApp Twilio enviado a ${to} — SID: ${msg.sid}`);
   }
 
-  // ── Envía Email vía Resend (HTTPS — funciona en Railway) ────────────────────
+  // ── Envía Email vía MailerSend (HTTPS — funciona en Railway) ───────────────
   async enviarEmailDirecto(destinatario: string, asunto: string, cuerpo: string): Promise<void> {
-    const apiKey = process.env.RESEND_API_KEY;
+    const apiKey = process.env.MAILERSEND_API_KEY;
     if (!apiKey) {
-      this.logger.error('RESEND_API_KEY no configurada — email no enviado');
+      this.logger.error('MAILERSEND_API_KEY no configurada — email no enviado');
       return;
     }
 
-    const resend = new Resend(apiKey);
-    const from = 'Huellitas Digitales <onboarding@resend.dev>';
+    const mailerSend = new MailerSend({ apiKey });
+    const sentFrom = new Sender('MS_huellitas@test-r9084zvzeovgw63d.mlsender.net', 'Huellitas Digitales');
+    const recipients = [new Recipient(destinatario)];
 
-    const { error } = await resend.emails.send({
-      from,
-      to: destinatario,
-      subject: asunto,
-      html: this.wrapHtml(cuerpo),
-    });
+    const emailParams = new EmailParams()
+      .setFrom(sentFrom)
+      .setTo(recipients)
+      .setSubject(asunto)
+      .setHtml(this.wrapHtml(cuerpo));
 
-    if (error) {
-      this.logger.error(`Resend error: ${JSON.stringify(error)}`);
-      throw new Error(error.message);
-    }
-
+    await mailerSend.email.send(emailParams);
     this.logger.log(`Email enviado a ${destinatario}`);
   }
 
