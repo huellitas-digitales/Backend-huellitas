@@ -9,9 +9,11 @@ import { Servicio } from '../../core/servicios/entities/servicio.entity';
 import { HistorialClinico } from '../historial_clinico/entities/historial_clinico.entity'; 
 
 import { CreateCitaDto } from './dto/create-cita.dto';
+import { AgendarCitaDto } from './dto/agendar-cita.dto';
 import { CitasGateway } from './citas.gateway';
 import { CitaResponseDto } from './dto/cita-response.dto';
 import { LogsSistemaService } from '../../core/logs_sistema/logs_sistema.service';
+import { NotificacionService } from './notificacion.service';
 
 @Injectable()
 export class CitasService {
@@ -48,6 +50,7 @@ export class CitasService {
     @InjectRepository(HistorialClinico) private readonly historialRepository: Repository<HistorialClinico>,
     private readonly citasGateway: CitasGateway,
     private readonly logsService: LogsSistemaService,
+    private readonly notificacionService: NotificacionService,
   ) {}
 
   private readonly logger = new Logger(CitasService.name);
@@ -231,8 +234,22 @@ async create(createCitaDto: CreateCitaDto, usuarioId: string): Promise<CitaRespo
     return citaCompleta;
   }
 
+  async agendarCita(agendarCitaDto: AgendarCitaDto, usuarioId: string): Promise<any> {
+    const notificacionPayload = {
+      title: 'Cita agendada',
+      message: `La cita para ${agendarCitaDto.mascota} el ${agendarCitaDto.fecha} ha sido registrada. Motivo: ${agendarCitaDto.motivo}`,
+      destinatarioId: usuarioId,
+    };
 
-  // ... (tu método create anterior)
+    await this.notificacionService.enviarNotificacion(notificacionPayload);
+
+    return {
+      id: 'cita-fake-001',
+      fecha: agendarCitaDto.fecha,
+      mascota: agendarCitaDto.mascota,
+      motivo: agendarCitaDto.motivo,
+    };
+  }
 
   async cambiarEstado(id: string, nuevoEstado: string, usuarioId: string, userRole: string, motivoCancelacion?: string): Promise<CitaResponseDto> {
     const cita = await this.citasRepository.findOne({ where: { id } });

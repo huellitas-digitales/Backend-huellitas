@@ -9,11 +9,12 @@ import { Servicio } from '../../core/servicios/entities/servicio.entity';
 import { HistorialClinico } from '../historial_clinico/entities/historial_clinico.entity';
 import { CitasGateway } from './citas.gateway';
 import { LogsSistemaModule } from '../../core/logs_sistema/logs_sistema.module';
+import { NotificacionService } from './notificacion.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([Cita, HorarioAtencion, Servicio, FechaBloqueada, HistorialClinico]), LogsSistemaModule],
   controllers: [CitasController],
-  providers: [CitasService, CitasGateway],
+  providers: [CitasService, CitasGateway, NotificacionService],
   exports: [CitasService, CitasGateway],
 })
 export class CitasModule {}

@@ -4,8 +4,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CitasService } from './citas.service';
-import { CreateCitaDto } from './dto/create-cita.dto';
-import { UpdateEstadoCitaDto } from './dto/update-estado-cita.dto';
+import { CreateCitaDto } from './dto/create-cita.dto';import { AgendarCitaDto } from './dto/agendar-cita.dto';import { UpdateEstadoCitaDto } from './dto/update-estado-cita.dto';
 import { JwtAuthGuard } from '../../identidad/auth/guards/jwt.guard';
 import { RolesGuard } from '../../identidad/auth/guards/roles.guard';
 import { Roles } from '../../identidad/auth/decorators/roles.decorator';
@@ -30,6 +29,19 @@ export class CitasController {
   ): Promise<CitaResponseDto> {
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
     return this.citasService.create(createCitaDto, req.user.id);
+  }
+
+  @Post('agendar')
+  @Roles('Administrador', 'Veterinario', 'Cajero', 'Cliente')
+  @ApiOperation({ summary: 'Agendar cita con notificación' })
+  @ApiResponse({ status: 201, description: 'Cita agendada con notificación.' })
+  @ApiResponse({ status: 400, description: 'Solicitud inválida.' })
+  async agendar(
+    @Body() agendarCitaDto: AgendarCitaDto,
+    @Req() req: any,
+  ) {
+    const cita = await this.citasService.agendarCita(agendarCitaDto, req.user.id);
+    return cita;
   }
 
   @Get('reportes/anual')
