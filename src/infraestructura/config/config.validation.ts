@@ -32,12 +32,13 @@ export const validationSchema = Joi.object({
   TWILIO_AUTH_TOKEN: Joi.string().required(),
   TWILIO_WHATSAPP_FROM: Joi.string().required(),
 
-  // Email (Gmail SMTP)
-  EMAIL_HOST: Joi.string().required(),
-  EMAIL_PORT: Joi.number().required(),
-  EMAIL_USER: Joi.string().email().required(),
-  EMAIL_PASS: Joi.string().required(),
-  EMAIL_FROM: Joi.string().required(),
+  // Email (Resend)
+  RESEND_API_KEY: Joi.string().optional(),
+  EMAIL_HOST: Joi.string().optional(),
+  EMAIL_PORT: Joi.number().optional(),
+  EMAIL_USER: Joi.string().email().optional(),
+  EMAIL_PASS: Joi.string().optional(),
+  EMAIL_FROM: Joi.string().optional(),
   ADMIN_EMAIL: Joi.string().email().required(),
 
   // Gemini y Bot
