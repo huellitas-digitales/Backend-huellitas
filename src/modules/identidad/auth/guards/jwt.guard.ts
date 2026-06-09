@@ -1,7 +1,8 @@
-import { Injectable, ExecutionContext } from '@nestjs/common';
+import { Injectable, ExecutionContext, UnauthorizedException } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { Reflector } from '@nestjs/core';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator';
+import { TokenBlacklistService } from '../token-blacklist.service';
 
 @Injectable()
 export class JwtAuthGuard extends AuthGuard('jwt') {
@@ -16,22 +17,28 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
       context.getClass(),
     ]);
     if (isPublic) return true;
+
     // 🛡️ INTERRUPTOR MAESTRO: ¿Está activado el Modo Dios en el .env?
     if (process.env.MODO_DIOS === 'true' && process.env.NODE_ENV !== 'production') {
       const request = context.switchToHttp().getRequest();
-      
-      // Inyectamos tu Administrador para que el decorador @CurrentUser funcione
-      // y la base de datos guarde el "created_by" sin problemas.
-      request.user = { 
-        id: 'd4576ec1-15f4-4ca7-8cd5-6a0fb39f321d', // Tu UUID real
+      request.user = {
+        id: 'd4576ec1-15f4-4ca7-8cd5-6a0fb39f321d',
         email: 'admin@huellitas.local',
-        rol: 'Administrador' 
+        rol: 'Administrador',
       };
-      
-      return true; // Dejamos pasar la petición sin pedir Token
+      return true;
     }
 
-    // Si MODO_DIOS está apagado o no existe, ejecuta la seguridad estricta normal
+    // Verificar blacklist usando método estático — sin necesidad de DI
+    const request = context.switchToHttp().getRequest();
+    const authHeader: string | undefined = request.headers['authorization'];
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.slice(7);
+      if (TokenBlacklistService.check(token)) {
+        throw new UnauthorizedException('La sesión ha sido cerrada. Inicia sesión nuevamente.');
+      }
+    }
+
     return super.canActivate(context);
   }
 }

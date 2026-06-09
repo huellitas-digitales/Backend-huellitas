@@ -13,14 +13,14 @@ export class InteraccionesBotController {
   constructor(private readonly service: InteraccionesBotService) {}
 
   @Get()
-  @Roles('Administrador', 'Veterinario', 'Cajero', 'Cliente')
+  @Roles('Administrador', 'Veterinario')
   @ApiOperation({ summary: 'Listar todas las interacciones del bot' })
   findAll() {
     return this.service.findAll();
   }
 
   @Get('numero/:numero')
-  @Roles('Administrador', 'Veterinario', 'Cajero', 'Cliente')
+  @Roles('Administrador', 'Veterinario')
   @ApiOperation({ summary: 'Ver historial de conversación por número de WhatsApp' })
   @ApiParam({ name: 'numero', example: '59171234567' })
   porNumero(@Param('numero') numero: string) {
@@ -28,7 +28,7 @@ export class InteraccionesBotController {
   }
 
   @Get(':id')
-  @Roles('Administrador', 'Veterinario', 'Cajero', 'Cliente')
+  @Roles('Administrador', 'Veterinario')
   @ApiOperation({ summary: 'Ver detalle de una interacción' })
   @ApiParam({ name: 'id' })
   findOne(@Param('id', new ParseUUIDPipe({ version: '4' })) id: string) {

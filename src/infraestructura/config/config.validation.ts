@@ -24,6 +24,25 @@ export const validationSchema = Joi.object({
   DB_LOGS: Joi.boolean().default(false),
 
   ACTIVE_JWT: Joi.boolean().default(true),
-  JWT_SECRET: Joi.string().required(),
+  JWT_SECRET: Joi.string().min(16).required(),
   JWT_TIME_EXPIRE: Joi.string().default('24h'),
+
+  // Twilio WhatsApp
+  TWILIO_ACCOUNT_SID: Joi.string().required(),
+  TWILIO_AUTH_TOKEN: Joi.string().required(),
+  TWILIO_WHATSAPP_FROM: Joi.string().required(),
+
+  // Email (Gmail SMTP)
+  EMAIL_HOST: Joi.string().required(),
+  EMAIL_PORT: Joi.number().required(),
+  EMAIL_USER: Joi.string().email().required(),
+  EMAIL_PASS: Joi.string().required(),
+  EMAIL_FROM: Joi.string().required(),
+  ADMIN_EMAIL: Joi.string().email().required(),
+
+  // Gemini y Bot
+  GEMINI_API_KEY: Joi.string().required(),
+  BOT_API_KEY: Joi.string().min(16).required(),
+
+  MODO_DIOS: Joi.boolean().default(false),
 });

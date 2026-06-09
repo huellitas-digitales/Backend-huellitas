@@ -1,6 +1,6 @@
 import {
   Controller, Post, Body, Patch, Param, ParseUUIDPipe,
-  UseGuards, Req, Get, Query, Delete, HttpCode, BadRequestException,
+  UseGuards, Req, Get, Query, Delete, HttpCode, BadRequestException, ForbiddenException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { CitasService } from './citas.service';
@@ -76,7 +76,15 @@ export class CitasController {
     @Query('estado') estado?: string,
     @Query('fecha') fecha?: string,
     @Query('clienteId') clienteId?: string,
+    @Req() req?: any,
   ): Promise<CitaResponseDto[]> {
+    // Cliente solo puede ver sus propias citas
+    if (req.user.rol === 'Cliente') {
+      if (clienteId && clienteId !== req.user.id) {
+        throw new ForbiddenException('Solo puedes consultar tus propias citas.');
+      }
+      clienteId = req.user.id;
+    }
     return this.citasService.findAll({ mascotaId, veterinarioId, estado, fecha, clienteId });
   }
 
@@ -121,6 +129,7 @@ export class CitasController {
   }
 
   @Get('disponibilidad/:veterinarioId')
+  @Roles('Administrador', 'Veterinario', 'Cajero', 'Cliente')
   async obtenerDisponibilidad(
     @Param('veterinarioId') veterinarioId: string,
     @Query('fecha') fecha: string,

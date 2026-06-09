@@ -39,7 +39,13 @@ export class HistorialClinicoController {
   findAll(
     @Query('mascotaId') mascotaId?: string,
     @Query('before') before?: string,
+    @Req() req?: any,
   ): Promise<HistorialClinicoResponseDto[]> {
+    // Cliente solo puede consultar historiales si filtra por mascotaId (verificado en service via mi-mascota)
+    // Sin mascotaId, el listado general está prohibido para Cliente
+    if (req.user.rol === 'Cliente' && !mascotaId) {
+      throw new ForbiddenException('Debes especificar ?mascotaId para consultar historiales.');
+    }
     return this.historialService.findAll(mascotaId, before);
   }
 

@@ -54,11 +54,13 @@ export class MascotasController {
   @Post('mi-mascota')
   @Roles('Administrador', 'Veterinario', 'Cajero', 'Cliente')
   @ApiOperation({ summary: 'Cliente: auto-registrar su propia mascota (HU-26)' })
-  createMiMascota(@Body() createMascotaDto: CreateMascotaDto) {
-    return this.mascotasService.createMascota(
-      createMascotaDto,
-      createMascotaDto.id_dueno_fk ?? '',
-    );
+  createMiMascota(
+    @Body() createMascotaDto: CreateMascotaDto,
+    @CurrentUser('id') userId: string,
+  ) {
+    // El dueño siempre es el usuario autenticado, ignoramos id_dueno_fk del body
+    createMascotaDto.id_dueno_fk = userId;
+    return this.mascotasService.createMascota(createMascotaDto, userId);
   }
 
   @Get('reportes/estadisticas-mensuales')
@@ -98,7 +100,7 @@ export class MascotasController {
   @Patch(':id')
   @Roles('Administrador', 'Veterinario', 'Cajero', 'Cliente')
   @ApiOperation({ summary: 'Actualizar datos básicos de una mascota' })
-  update(
+  async update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateMascotaDto: UpdateMascotaDto,
     @CurrentUser() user: any
@@ -106,6 +108,12 @@ export class MascotasController {
     if (user.rol === 'Veterinario') {
       if (updateMascotaDto.id_dueno_fk !== undefined || updateMascotaDto.fecha_nacimiento !== undefined) {
         throw new BadRequestException('El veterinario no tiene permisos para modificar la fecha de nacimiento o el dueño de la mascota.');
+      }
+    }
+    if (user.rol === 'Cliente') {
+      const mascota = await this.mascotasService.findOneClean(id);
+      if (mascota.id_dueno_fk !== user.id) {
+        throw new BadRequestException('Solo puedes modificar tus propias mascotas.');
       }
     }
     return this.mascotasService.update(id, updateMascotaDto);

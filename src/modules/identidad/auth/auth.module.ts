@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule, JwtSignOptions } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
 
@@ -7,16 +8,21 @@ import { UsuariosModule } from '../usuarios/usuarios.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 // Tu infraestructura
 import { MyConfigModule } from '../../../infraestructura/config/config.module';
 import { MyJwtConfig } from '../../../infraestructura/config/services/jwt.config';
 import { LogsSistemaModule } from '../../core/logs_sistema/logs_sistema.module';
+import { MensajeroModule } from '../../comunicacion/mensajero/mensajero.module';
+import { Usuario } from '../usuarios/entities/usuario.entity';
 
 @Module({
   imports: [
     UsuariosModule,
     LogsSistemaModule,
+    MensajeroModule,
+    TypeOrmModule.forFeature([Usuario]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
 
     MyConfigModule,
@@ -38,7 +44,7 @@ import { LogsSistemaModule } from '../../core/logs_sistema/logs_sistema.module';
     }),
   ],
   controllers: [AuthController],
-  providers: [AuthService, JwtStrategy],
-  exports: [JwtModule, PassportModule, JwtStrategy],
+  providers: [AuthService, JwtStrategy, TokenBlacklistService],
+  exports: [JwtModule, PassportModule, JwtStrategy, TokenBlacklistService],
 })
 export class AuthModule {}

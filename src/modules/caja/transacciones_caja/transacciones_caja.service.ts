@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, DataSource, Repository } from 'typeorm';
+import { LogsSistemaService } from '../../core/logs_sistema/logs_sistema.service';
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const PDFDocument = require('pdfkit') as typeof import('pdfkit');
 import { CreateDetalleVentaProductoDto, CreateTransaccionesCajaDto } from './dto/create-transacciones_caja.dto';
@@ -49,6 +50,7 @@ export class TransaccionesCajaService {
     @InjectRepository(ConfiguracionClinica)
     private readonly configRepo: Repository<ConfiguracionClinica>,
     private readonly dataSource: DataSource,
+    private readonly logsService: LogsSistemaService,
   ) {}
 
   private async obtenerDescuentoMaxPct(): Promise<number> {
@@ -169,6 +171,15 @@ export class TransaccionesCajaService {
         nuevoDetalle.updatedBy = cajeroId;
         await detalleRepo.save(nuevoDetalle);
       }
+
+      await this.logsService.registrar({
+        usuarioId: cajeroId,
+        accion: 'VENTA_MOSTRADOR_CREADA',
+        categoria: 'FINANZAS',
+        tablaAfectada: 'transacciones_caja',
+        registroId: transaccion.id,
+        detalles: { total: transaccion.totalCobrado, metodo: transaccion.metodoPago },
+      });
 
       return this.findOneWithManager(transaccion.id, manager);
     });
@@ -525,7 +536,18 @@ export class TransaccionesCajaService {
     }
     transaccion.estadoTransaccion = 'Anulada';
     transaccion.updatedBy = usuarioId;
-    return this.transaccionRepo.save(transaccion);
+    const anulada = await this.transaccionRepo.save(transaccion);
+
+    await this.logsService.registrar({
+      usuarioId,
+      accion: 'TRANSACCION_ANULADA',
+      categoria: 'FINANZAS',
+      tablaAfectada: 'transacciones_caja',
+      registroId: id,
+      detalles: { total: transaccion.totalCobrado, metodo: transaccion.metodoPago },
+    });
+
+    return anulada;
   }
 
   remove(): never {

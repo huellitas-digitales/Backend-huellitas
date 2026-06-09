@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, ConflictException,NotFoundException } from '@nestjs/common';
+import { Injectable, BadRequestException, ConflictException, NotFoundException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between, IsNull } from 'typeorm';
 
@@ -11,6 +11,7 @@ import { HistorialClinico } from '../historial_clinico/entities/historial_clinic
 import { CreateCitaDto } from './dto/create-cita.dto';
 import { CitasGateway } from './citas.gateway';
 import { CitaResponseDto } from './dto/cita-response.dto';
+import { LogsSistemaService } from '../../core/logs_sistema/logs_sistema.service';
 
 @Injectable()
 export class CitasService {
@@ -46,7 +47,10 @@ export class CitasService {
     @InjectRepository(FechaBloqueada) private readonly fechasBloqueadasRepository: Repository<FechaBloqueada>,
     @InjectRepository(HistorialClinico) private readonly historialRepository: Repository<HistorialClinico>,
     private readonly citasGateway: CitasGateway,
+    private readonly logsService: LogsSistemaService,
   ) {}
+
+  private readonly logger = new Logger(CitasService.name);
 
   private mapToResponse(cita: Cita): CitaResponseDto {
     return {
@@ -60,6 +64,8 @@ export class CitasService {
       requiere_confirmacion: cita.requiere_confirmacion,
       motivo_cancelacion: cita.motivo_cancelacion ?? null,
       deletedAt: cita.deletedAt ?? undefined,
+      createdAt: cita.createdAt,
+      updatedAt: cita.updatedAt,
       mascota: cita.mascota ? {
         id: cita.mascota.id,
         nombre: cita.mascota.nombre,
@@ -186,7 +192,7 @@ async create(createCitaDto: CreateCitaDto, usuarioId: string): Promise<CitaRespo
     // --- 4. DETECCIÓN DE COLISIONES (OVERLAPS) ---
     const colision = await this.citasRepository.createQueryBuilder('cita')
       .where('cita.id_veterinario_fk = :vetId', { vetId: id_veterinario_fk })
-      .andWhere('cita.estado NOT IN (:...estados)', { estados: ['Cancelada', 'No_Asistio'] })
+      .andWhere('cita.estado NOT IN (:...estados)', { estados: ['Cancelada', 'No_Asistio', 'Completada'] })
       .andWhere(`(
         cita.fecha_hora_inicio < :fechaFin 
         AND 
@@ -212,6 +218,16 @@ async create(createCitaDto: CreateCitaDto, usuarioId: string): Promise<CitaRespo
     const citaGuardada = await this.citasRepository.save(nuevaCita);
     const citaCompleta = await this.findOne(citaGuardada.id);
     this.citasGateway.emitirCitaCreada(citaCompleta as any);
+
+    await this.logsService.registrar({
+      usuarioId,
+      accion: 'CITA_CREADA',
+      categoria: 'CLINICO',
+      tablaAfectada: 'citas',
+      registroId: citaGuardada.id,
+      detalles: { fecha: citaGuardada.fecha_hora_inicio, estado: citaGuardada.estado },
+    });
+
     return citaCompleta;
   }
 
@@ -296,17 +312,27 @@ async create(createCitaDto: CreateCitaDto, usuarioId: string): Promise<CitaRespo
         historial.estado = 'Cerrado';
         historial.updatedBy = usuarioId;
         await this.historialRepository.save(historial);
-        console.log(`[cambiarEstado Cita] Historial clínico ${historial.id} cerrado automáticamente.`);
+        this.logger.log(`Historial clínico ${historial.id} cerrado automáticamente al completar cita ${id}.`);
       }
     }
 
     const citaCompleta = await this.findOne(citaActualizada.id);
-    this.citasGateway.emitirCitaActualizada(citaCompleta as any); // Mantener compatibilidad si es necesario
+    this.citasGateway.emitirCitaActualizada(citaCompleta as any);
+
+    await this.logsService.registrar({
+      usuarioId,
+      accion: 'CITA_ESTADO_CAMBIADO',
+      categoria: 'CLINICO',
+      tablaAfectada: 'citas',
+      registroId: id,
+      detalles: { estadoAnterior: estadoActual, estadoNuevo: nuevoEstado },
+    });
+
     return citaCompleta;
   }
 
   async findAll(query: { mascotaId?: string; veterinarioId?: string; estado?: string; fecha?: string; clienteId?: string }): Promise<CitaResponseDto[]> {
-    console.log('[findAll Citas] Filtros recibidos:', query);
+    this.logger.debug(`findAll citas — filtros: ${JSON.stringify(query)}`);
     const whereClause: any = {};
 
     // Limpieza de parámetros para evitar strings vacíos, "undefined" o "null"
@@ -617,7 +643,7 @@ async create(createCitaDto: CreateCitaDto, usuarioId: string): Promise<CitaRespo
 
     const citasExistentes = await this.citasRepository.createQueryBuilder('cita')
       .where('cita.id_veterinario_fk = :vetId', { vetId: veterinarioId })
-      .andWhere('cita.estado NOT IN (:...estados)', { estados: ['Cancelada', 'No_Asistio'] })
+      .andWhere('cita.estado NOT IN (:...estados)', { estados: ['Cancelada', 'No_Asistio', 'Completada'] })
       .andWhere('cita.fecha_hora_inicio >= :inicioDia', { inicioDia })
       .andWhere('cita.fecha_hora_inicio <= :finDia', { finDia })
       .getMany();

@@ -12,6 +12,7 @@ import { MascotaResponseDto } from './dto/mascotas-response.dto';
 import { BaseCrudService } from '../../../compartido/utils/base-crud.service';
 import { ExpedienteClinicoService } from '../../clinica/expediente_clinico/expediente_clinico.service';
 import { CitasService } from '../../clinica/citas/citas.service';
+import { LogsSistemaService } from '../../core/logs_sistema/logs_sistema.service';
 import { Cita } from '../../clinica/citas/entities/cita.entity';
 import { Hospitalizacion } from '../../clinica/hospitalizaciones/entities/hospitalizacione.entity';
 import { HistorialClinico } from '../../clinica/historial_clinico/entities/historial_clinico.entity';
@@ -30,6 +31,7 @@ export class MascotasService extends BaseCrudService<Mascota> {
     private readonly especieRepository: Repository<Especie>,
     private readonly expedienteService: ExpedienteClinicoService,
     private readonly citasService: CitasService,
+    private readonly logsService: LogsSistemaService,
   ) {
     super(mascotaRepository, 'Mascota');
   }
@@ -151,6 +153,15 @@ export class MascotasService extends BaseCrudService<Mascota> {
     // 4. Eliminar mascota temporal
     await this.mascotaRepository.delete(idTemporal);
 
+    await this.logsService.registrar({
+      usuarioId: adminId,
+      accion: 'MASCOTAS_FUSIONADAS',
+      categoria: 'CLINICO',
+      tablaAfectada: 'mascotas',
+      registroId: idReal,
+      detalles: { idTemporal, idReal },
+    });
+
     return {
       mensaje: 'Fusión de perfiles completada. Registros clínicos y hospitalizaciones migrados exitosamente.',
       mascotaRealId: idReal,
@@ -178,11 +189,20 @@ export class MascotasService extends BaseCrudService<Mascota> {
     });
 
     const mascotaGuardada = await this.mascotaRepository.save(nuevaMascota);
-    
+
     await this.expedienteService.create({
       id_mascota_fk: mascotaGuardada.id,
       notas_generales: `Expediente abierto automáticamente por el sistema para ${mascotaGuardada.nombre}.`,
     }, creatorId);
+
+    await this.logsService.registrar({
+      usuarioId: creatorId,
+      accion: 'MASCOTA_CREADA',
+      categoria: 'CLINICO',
+      tablaAfectada: 'mascotas',
+      registroId: mascotaGuardada.id,
+      detalles: { nombre: mascotaGuardada.nombre, hashQr: mascotaGuardada.hash_qr_identidad },
+    });
 
     return MascotaResponseDto.fromEntity(mascotaGuardada);
   }

@@ -1,4 +1,4 @@
-import { Injectable, BadRequestException, NotFoundException, ConflictException } from '@nestjs/common';
+import { Injectable, BadRequestException, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, EntityManager, Repository } from 'typeorm';
 import { LogsSistemaService } from '../../core/logs_sistema/logs_sistema.service';
@@ -44,6 +44,8 @@ export class HistorialClinicoService {
     private readonly logsService: LogsSistemaService,
     private readonly dataSource: DataSource,
   ) {}
+
+  private readonly logger = new Logger(HistorialClinicoService.name);
 
   async create(createDto: CreateHistorialClinicoDto, usuarioId: string): Promise<HistorialClinicoResponseDto> {
     // 1. OBTENEMOS LA CITA Y LA MASCOTA
@@ -254,10 +256,10 @@ export class HistorialClinicoService {
         await queryRunner.manager.save(VacunaAplicada, nuevaVacuna);
       }
       // --- E. GUARDAR ARCHIVOS ADJUNTOS (Opcional) ---
-      console.log('📎 [BACK] archivos recibidos:', JSON.stringify(dto.archivos));
+      this.logger.debug(`Archivos recibidos para historial: ${dto.archivos?.length ?? 0}`);
       if (dto.archivos && dto.archivos.length > 0) {
         for (const file of dto.archivos) {
-          console.log('📎 [BACK] procesando archivo:', JSON.stringify(file));
+          this.logger.debug(`Procesando archivo adjunto tipo: ${file.tipo_archivo}`);
           const nuevoArchivo = queryRunner.manager.create(ArchivoAdjunto, {
             id_historial_fk: hcGuardado.id,
             urlArchivo:      file.url_archivo,
@@ -330,7 +332,7 @@ export class HistorialClinicoService {
     } catch (err: any) {
       // SI ALGO FALLA (ej. error de tipado o base de datos), REVERTIMOS TODO
       await queryRunner.rollbackTransaction();
-      console.error("Error en Transacción Finalizar Consulta:", err);
+      this.logger.error(`Error en transacción finalizar consulta: ${err?.message}`, err?.stack);
       throw new BadRequestException(`No se pudo guardar la consulta. Verifica los datos enviados. Detalle: ${err.message}`);
     } finally {
       // Siempre se debe liberar el Runner
@@ -681,6 +683,7 @@ export class HistorialClinicoService {
         veterinario: h.veterinario
           ? `Dr(a). ${h.veterinario.nombres} ${h.veterinario.apellidos}`
           : null,
+        fecha_agendada: h.cita?.fecha_hora_inicio ?? null,
         servicio: h.cita?.servicio?.nombre ?? null,
 
         recetas: (h.recetas ?? []).map(r => ({
