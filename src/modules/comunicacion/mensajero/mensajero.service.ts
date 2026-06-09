@@ -65,7 +65,7 @@ export class MensajeroService {
     }
 
     const resend = new Resend(apiKey);
-    const from = process.env.EMAIL_FROM ?? 'Huellitas <onboarding@resend.dev>';
+    const from = 'Huellitas Digitales <onboarding@resend.dev>';
 
     const { error } = await resend.emails.send({
       from,
