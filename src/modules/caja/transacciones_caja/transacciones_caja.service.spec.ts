@@ -3,6 +3,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { TransaccionesCajaService } from './transacciones_caja.service';
 import { TransaccionCaja } from './entities/transacciones_caja.entity';
+import { ConfiguracionClinica } from '../../core/configuracion_clinica/entities/configuracion_clinica.entity';
 
 describe('TransaccionesCajaService', () => {
   let service: TransaccionesCajaService;
@@ -16,8 +17,12 @@ describe('TransaccionesCajaService', () => {
           useValue: { find: jest.fn(), findOne: jest.fn(), save: jest.fn(), manager: { getRepository: jest.fn() } },
         },
         {
+          provide: getRepositoryToken(ConfiguracionClinica),
+          useValue: {},
+        },
+        {
           provide: DataSource,
-          useValue: { transaction: jest.fn() },
+          useValue: {},
         },
       ],
     }).compile();
