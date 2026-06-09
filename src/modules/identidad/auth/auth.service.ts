@@ -73,41 +73,7 @@ export class AuthService {
       throw new UnauthorizedException('Credenciales incorrectas');
     }
 
-    // 3. Si es Admin o Vet → flujo OTP
-    if (ROLES_CON_OTP.includes(usuario.rol?.nombre)) {
-      const codigo = Math.floor(100000 + Math.random() * 900000).toString();
-      const expira = new Date(Date.now() + 10 * 60 * 1000); // 10 minutos
-
-      await this.usuarioRepo.update(usuario.id, {
-        otp_codigo: codigo,
-        otp_expira_en: expira,
-      });
-
-      // Envío en segundo plano — no bloqueamos la respuesta HTTP
-      this.mensajero.enviarEmailDirecto(
-        usuario.email,
-        '🔐 Código de verificación — Huellitas',
-        `
-          <h2 style="margin:0 0 12px">Tu código de acceso</h2>
-          <p style="margin:0 0 20px;color:#6b7280">Ingresa este código en la pantalla de verificación. Expira en <strong>10 minutos</strong>.</p>
-          <div style="font-size:36px;font-weight:900;letter-spacing:12px;color:#0ea5e9;text-align:center;padding:20px 0">${codigo}</div>
-          <p style="margin:20px 0 0;font-size:12px;color:#9ca3af">Si no fuiste tú, ignora este correo. Tu cuenta sigue segura.</p>
-        `,
-      ).catch((err) => this.logger.error(`Error enviando OTP email: ${err?.message ?? err}`));
-
-      await this.logsService.registrar({
-        usuarioId: usuario.id,
-        accion: 'OTP_ENVIADO',
-        categoria: 'SEGURIDAD',
-        tablaAfectada: 'usuarios',
-        registroId: usuario.id,
-        detalles: { email },
-      });
-
-      return { requiere_otp: true, email: usuario.email };
-    }
-
-    // 4. Cliente / Cajero → JWT directo (sin OTP)
+    // 3. JWT directo para todos los roles
     await this.usuariosService.registrarLoginExitoso(usuario);
     await this.logsService.registrar({
       usuarioId: usuario.id,
