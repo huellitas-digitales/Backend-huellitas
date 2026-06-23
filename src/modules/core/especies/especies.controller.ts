@@ -10,6 +10,18 @@ import { JwtAuthGuard } from '../../identidad/auth/guards/jwt.guard';
 import { RolesGuard } from '../../identidad/auth/guards/roles.guard';
 import { Roles } from '../../identidad/auth/decorators/roles.decorator';
 
+@ApiTags('Público - Catálogos')
+@Controller('publico/especies')
+export class PublicoEspeciesController {
+  constructor(private readonly especiesService: EspeciesService) {}
+
+  @Get()
+  @ApiOperation({ summary: 'Listar especies (público, sin JWT — para formulario de registro)' })
+  findAll() {
+    return this.especiesService.findAll();
+  }
+}
+
 @ApiTags('Core - Especies')
 @ApiBearerAuth('access-token')
 @UseGuards(JwtAuthGuard, RolesGuard)

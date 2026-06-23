@@ -4,7 +4,9 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { UsuariosService } from '../usuarios/usuarios.service';
+import { MascotasService } from '../mascotas/mascotas.service';
 import { LoginDto } from './dto/login.dto';
+import { RegistroPublicoDto } from './dto/registro-publico.dto';
 import { LogsSistemaService } from '../../core/logs_sistema/logs_sistema.service';
 import { MensajeroService } from '../../comunicacion/mensajero/mensajero.service';
 import { Usuario } from '../usuarios/entities/usuario.entity';
@@ -17,6 +19,7 @@ export class AuthService {
 
   constructor(
     private readonly usuariosService: UsuariosService,
+    private readonly mascotasService: MascotasService,
     private readonly jwtService: JwtService,
     private readonly logsService: LogsSistemaService,
     private readonly mensajero: MensajeroService,
@@ -142,5 +145,43 @@ export class AuthService {
     if (!valida) throw new UnauthorizedException('Contraseña incorrecta.');
 
     return { ok: true };
+  }
+
+  async registerPublico(dto: RegistroPublicoDto): Promise<{ mensaje: string }> {
+    // 1. Crear el usuario Cliente
+    const nuevoUsuario = await this.usuariosService.autoRegistroCliente({
+      nombres:    dto.nombres,
+      apellidos:  dto.apellidos,
+      email:      dto.email,
+      password:   dto.password,
+      telefono:   dto.telefono,
+      avatar_url: dto.avatar_url,
+    });
+
+    // 2. Crear la mascota con el ID del usuario recién creado
+    await this.mascotasService.createMascota(
+      {
+        nombre:                  dto.mascota.nombre,
+        sexo:                    dto.mascota.sexo,
+        id_raza_fk:              dto.mascota.id_raza_fk,
+        fecha_nacimiento:        dto.mascota.fecha_nacimiento,
+        esterilizado:            dto.mascota.esterilizado ?? false,
+        foto_url:                dto.mascota.foto_url,
+        caracteristicas_fisicas: dto.mascota.caracteristicas_fisicas,
+        id_dueno_fk:             nuevoUsuario.id,
+      },
+      nuevoUsuario.id,
+    );
+
+    await this.logsService.registrar({
+      usuarioId: nuevoUsuario.id,
+      accion:    'REGISTRO_PUBLICO',
+      categoria: 'SISTEMA',
+      tablaAfectada: 'usuarios',
+      registroId: nuevoUsuario.id,
+      detalles: { email: nuevoUsuario.email, mascota: dto.mascota.nombre },
+    });
+
+    return { mensaje: '¡Registro exitoso! Ya puedes iniciar sesión.' };
   }
 }

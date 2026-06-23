@@ -2,7 +2,6 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as nodemailer from 'nodemailer';
-import Twilio from 'twilio';
 import { RegistroNotificacion } from '../registro_notificaciones/entities/registro_notificacione.entity';
 
 @Injectable()
@@ -35,25 +34,43 @@ export class MensajeroService {
     }
   }
 
-  // ── Envía WhatsApp vía Twilio ─────────────────────────────────────────────────
+  // ── Envía WhatsApp vía Meta Graph API ───────────────────────────────────────
   async enviarWhatsAppDirecto(telefono: string, mensaje: string): Promise<void> {
-    const sid   = process.env.TWILIO_ACCOUNT_SID;
-    const token = process.env.TWILIO_AUTH_TOKEN;
-    const from  = process.env.TWILIO_WHATSAPP_FROM; // ej: whatsapp:+14155238886
+    const phoneNumberId = process.env.META_PHONE_NUMBER_ID;
+    const accessToken   = process.env.META_ACCESS_TOKEN;
 
-    if (!sid || !token || !from) {
-      this.logger.warn('Twilio no configurado: faltan TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN o TWILIO_WHATSAPP_FROM');
+    if (!phoneNumberId || !accessToken) {
+      this.logger.warn('Meta WhatsApp no configurado: faltan META_PHONE_NUMBER_ID o META_ACCESS_TOKEN');
       return;
     }
 
-    // Normalizar número al formato whatsapp:+591XXXXXXX
-    const numero = telefono.replace(/[\s\-\(\)]/g, '');
-    const to = numero.startsWith('whatsapp:') ? numero : `whatsapp:+${numero.replace(/^\+/, '')}`;
+    // Normalizar: solo dígitos, sin el prefijo "whatsapp:" ni el "+"
+    const to = telefono.replace(/[\s\-\(\)whatsapp:+]/g, '');
 
-    const client = Twilio(sid, token);
-    const msg = await client.messages.create({ from, to, body: mensaje });
+    const url = `https://graph.facebook.com/v21.0/${phoneNumberId}/messages`;
+    const body = {
+      messaging_product: 'whatsapp',
+      to,
+      type: 'text',
+      text: { body: mensaje },
+    };
 
-    this.logger.log(`WhatsApp Twilio enviado a ${to} — SID: ${msg.sid}`);
+    const resp = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`Meta API error ${resp.status}: ${err}`);
+    }
+
+    const data = await resp.json() as any;
+    this.logger.log(`WhatsApp Meta enviado a ${to} — message_id: ${data?.messages?.[0]?.id}`);
   }
 
   // ── Envía Email vía Nodemailer (Gmail) ───────────────────────────────────────

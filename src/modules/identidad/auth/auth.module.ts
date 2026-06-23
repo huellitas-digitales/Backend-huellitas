@@ -5,6 +5,7 @@ import { PassportModule } from '@nestjs/passport';
 
 // Tus módulos de negocio
 import { UsuariosModule } from '../usuarios/usuarios.module';
+import { MascotasModule } from '../mascotas/mascotas.module';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './strategies/jwt.strategy';
@@ -20,6 +21,7 @@ import { Usuario } from '../usuarios/entities/usuario.entity';
 @Module({
   imports: [
     UsuariosModule,
+    MascotasModule,
     LogsSistemaModule,
     MensajeroModule,
     TypeOrmModule.forFeature([Usuario]),

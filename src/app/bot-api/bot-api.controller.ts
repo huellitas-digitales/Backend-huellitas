@@ -1,6 +1,7 @@
 import {
-  Controller, Get, Post, Delete, Body, Query, Param, Req, UnauthorizedException, Logger,
+  Controller, Get, Post, Delete, Body, Query, Param, Req, Res, UnauthorizedException, Logger, HttpCode,
 } from '@nestjs/common';
+import type { Response } from 'express';
 import { BotProcesadorService } from './bot-procesador.service';
 import { ApiTags, ApiOperation, ApiQuery, ApiHeader } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -161,5 +162,49 @@ export class BotApiController {
     );
     this.logger.log(`Cita BOT_WA creada: ${cita.id}`);
     return { ok: true, cita };
+  }
+
+  // ── GET /bot/webhook — Verificación del webhook de Meta ─────────────────────
+  @Get('webhook')
+  @ApiOperation({ summary: 'Meta: verificación del webhook (challenge)' })
+  verificarWebhookMeta(@Query() query: any, @Res() res: Response) {
+    const verifyToken = process.env.META_VERIFY_TOKEN;
+    const mode      = query['hub.mode'];
+    const token     = query['hub.verify_token'];
+    const challenge = query['hub.challenge'];
+
+    if (mode === 'subscribe' && token === verifyToken) {
+      this.logger.log('Webhook de Meta verificado correctamente.');
+      return res.status(200).send(challenge);
+    }
+    return res.status(403).send('Forbidden');
+  }
+
+  // ── POST /bot/webhook — Recibe mensajes entrantes de Meta ───────────────────
+  @Post('webhook')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'Meta: recibe mensajes de WhatsApp entrantes' })
+  async recibirWebhookMeta(@Body() body: any) {
+    try {
+      const entry    = body?.entry?.[0];
+      const change   = entry?.changes?.[0];
+      const value    = change?.value;
+      const messages = value?.messages;
+
+      if (!messages || messages.length === 0) return { ok: true }; // status/delivery receipts
+
+      const msg    = messages[0];
+      const numero = msg.from;                     // ej: "59177123456"
+      const texto  = msg?.text?.body ?? '';
+
+      if (!texto) return { ok: true };
+
+      this.logger.log(`📩 Meta webhook — de ${numero}: "${texto}"`);
+      const respuesta = await this.botProcesador.procesarMensaje(numero, texto);
+      this.logger.log(`🤖 Respuesta bot: ${respuesta.substring(0, 60)}...`);
+    } catch (err) {
+      this.logger.error(`Error procesando webhook Meta: ${err.message}`);
+    }
+    return { ok: true };
   }
 }

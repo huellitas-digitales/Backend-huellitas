@@ -58,7 +58,36 @@ export class UsuariosService extends BaseCrudService<Usuario> {
   }
 
   /**
-   * Método especial para el AuthModule (Login). 
+   * Auto-registro público: crea un usuario Cliente sin requerir un creador autenticado.
+   * Retorna la entidad completa (con id) para poder usarla en el registro de la mascota.
+   */
+  async autoRegistroCliente(dto: {
+    nombres: string;
+    apellidos: string;
+    email: string;
+    password: string;
+    telefono?: string;
+    avatar_url?: string;
+  }): Promise<Usuario> {
+    const existe = await this.usuarioRepository.findOne({ where: { email: dto.email } });
+    if (existe) throw new ConflictException('El correo ya está en uso.');
+
+    const password_hash = await bcrypt.hash(dto.password, 12);
+    const nuevoUsuario = this.usuarioRepository.create({
+      nombres: dto.nombres,
+      apellidos: dto.apellidos,
+      email: dto.email,
+      telefono: dto.telefono,
+      avatar_url: dto.avatar_url,
+      password_hash,
+      id_rol_fk: 4, // siempre Cliente
+    });
+
+    return await this.usuarioRepository.save(nuevoUsuario);
+  }
+
+  /**
+   * Método especial para el AuthModule (Login).
    * SÍ devuelve la entidad con password_hash porque se necesita para comparar.
    */
   async findByEmailForAuth(email: string): Promise<Usuario | null> {

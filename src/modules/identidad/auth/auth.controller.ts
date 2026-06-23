@@ -2,6 +2,7 @@ import { Controller, Post, Body, HttpCode, HttpStatus, UseGuards, Req } from '@n
 import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagger';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login.dto';
+import { RegistroPublicoDto } from './dto/registro-publico.dto';
 import { JwtAuthGuard } from './guards/jwt.guard';
 import { TokenBlacklistService } from './token-blacklist.service';
 
@@ -12,6 +13,15 @@ export class AuthController {
     private readonly authService: AuthService,
     private readonly blacklist: TokenBlacklistService,
   ) {}
+
+  @Post('register')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Registro público de cliente + primera mascota' })
+  @ApiResponse({ status: 201, description: 'Cuenta y mascota creadas exitosamente.' })
+  @ApiResponse({ status: 409, description: 'El correo ya está en uso.' })
+  register(@Body() dto: RegistroPublicoDto) {
+    return this.authService.registerPublico(dto);
+  }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
