@@ -5,6 +5,7 @@ import { Mascota } from '../../modules/identidad/mascotas/entities/mascota.entit
 import { Servicio } from '../../modules/core/servicios/entities/servicio.entity';
 import { CitasModule } from '../../modules/clinica/citas/citas.module';
 import { InteraccionesBotModule } from '../../modules/comunicacion/interacciones_bot/interacciones_bot.module';
+import { MensajeroModule } from '../../modules/comunicacion/mensajero/mensajero.module';
 import { BotApiController } from './bot-api.controller';
 import { BotProcesadorService } from './bot-procesador.service';
 
@@ -13,6 +14,7 @@ import { BotProcesadorService } from './bot-procesador.service';
     TypeOrmModule.forFeature([Usuario, Mascota, Servicio]),
     CitasModule,
     InteraccionesBotModule,
+    MensajeroModule,
   ],
   controllers: [BotApiController],
   providers: [BotProcesadorService],

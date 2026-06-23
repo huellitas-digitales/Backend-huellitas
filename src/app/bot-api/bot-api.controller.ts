@@ -3,6 +3,7 @@ import {
 } from '@nestjs/common';
 import type { Response } from 'express';
 import { BotProcesadorService } from './bot-procesador.service';
+import { MensajeroService } from '../../modules/comunicacion/mensajero/mensajero.service';
 import { ApiTags, ApiOperation, ApiQuery, ApiHeader } from '@nestjs/swagger';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -40,6 +41,7 @@ export class BotApiController {
     private readonly citasService: CitasService,
     private readonly interaccionesService: InteraccionesBotService,
     private readonly botProcesador: BotProcesadorService,
+    private readonly mensajero: MensajeroService,
   ) {}
 
   // ── POST /bot/procesar-mensaje ───────────────────────────────────────────────
@@ -201,7 +203,8 @@ export class BotApiController {
 
       this.logger.log(`📩 Meta webhook — de ${numero}: "${texto}"`);
       const respuesta = await this.botProcesador.procesarMensaje(numero, texto);
-      this.logger.log(`🤖 Respuesta bot: ${respuesta.substring(0, 60)}...`);
+      await this.mensajero.enviarWhatsAppDirecto(numero, respuesta);
+      this.logger.log(`🤖 Respuesta enviada a ${numero}: ${respuesta.substring(0, 60)}...`);
     } catch (err) {
       this.logger.error(`Error procesando webhook Meta: ${err.message}`);
     }
