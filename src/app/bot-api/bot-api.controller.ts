@@ -210,4 +210,33 @@ export class BotApiController {
     }
     return { ok: true };
   }
+
+  // ── POST /bot/webhook-openwa — Recibe mensajes de OpenWA (whatsapp-web.js) ──
+  @Post('webhook-openwa')
+  @HttpCode(200)
+  @ApiOperation({ summary: 'OpenWA: recibe mensajes de WhatsApp entrantes' })
+  async recibirWebhookOpenWA(@Body() body: any) {
+    try {
+      // OpenWA envía: { event, sessionId, data: { from, body, type, ... } }
+      if (body?.event !== 'message.received') return { ok: true };
+
+      const msg   = body?.data;
+      const texto = msg?.body ?? '';
+      const tipo  = msg?.type ?? '';
+
+      // Solo procesar mensajes de texto, ignorar grupos, estados
+      if (tipo !== 'chat' || !texto || msg?.from?.endsWith('@g.us')) return { ok: true };
+
+      // from viene como "591XXXXXXXX@c.us" → extraer solo el número
+      const numero = (msg?.from ?? '').replace('@c.us', '');
+
+      this.logger.log(`📩 OpenWA webhook — de ${numero}: "${texto}"`);
+      const respuesta = await this.botProcesador.procesarMensaje(numero, texto);
+      await this.mensajero.enviarViaOpenWA(numero, respuesta, body?.sessionId ?? 'default');
+      this.logger.log(`🤖 Respuesta OpenWA enviada a ${numero}: ${respuesta.substring(0, 60)}...`);
+    } catch (err) {
+      this.logger.error(`Error procesando webhook OpenWA: ${err.message}`);
+    }
+    return { ok: true };
+  }
 }

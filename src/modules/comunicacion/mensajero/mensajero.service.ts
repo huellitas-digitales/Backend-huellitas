@@ -73,6 +73,37 @@ export class MensajeroService {
     this.logger.log(`WhatsApp Meta enviado a ${to} — message_id: ${data?.messages?.[0]?.id}`);
   }
 
+  // ── Envía WhatsApp vía OpenWA (whatsapp-web.js) ─────────────────────────────
+  async enviarViaOpenWA(telefono: string, mensaje: string, sessionId = 'default'): Promise<void> {
+    const openwaUrl   = process.env.OPENWA_URL;
+    const openwaKey   = process.env.OPENWA_API_KEY;
+
+    if (!openwaUrl || !openwaKey) {
+      this.logger.warn('OpenWA no configurado: faltan OPENWA_URL o OPENWA_API_KEY');
+      return;
+    }
+
+    // WhatsApp chatId format: 591XXXXXXXX@c.us
+    const numero = telefono.replace(/[\s\-\(\)+]/g, '');
+    const chatId = numero.includes('@') ? numero : `${numero}@c.us`;
+
+    const resp = await fetch(`${openwaUrl}/sessions/${sessionId}/messages/send-text`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Api-Key': openwaKey,
+      },
+      body: JSON.stringify({ chatId, text: mensaje }),
+    });
+
+    if (!resp.ok) {
+      const err = await resp.text();
+      throw new Error(`OpenWA error ${resp.status}: ${err}`);
+    }
+
+    this.logger.log(`WhatsApp OpenWA enviado a ${chatId}`);
+  }
+
   // ── Envía Email vía Nodemailer (Gmail) ───────────────────────────────────────
   async enviarEmailDirecto(destinatario: string, asunto: string, cuerpo: string): Promise<void> {
     const transporter = nodemailer.createTransport({
