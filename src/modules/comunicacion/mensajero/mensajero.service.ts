@@ -87,7 +87,7 @@ export class MensajeroService {
     const numero = telefono.replace(/[\s\-\(\)+]/g, '');
     const chatId = numero.includes('@') ? numero : `${numero}@c.us`;
 
-    const resp = await fetch(`${openwaUrl}/sessions/${sessionId}/messages/send-text`, {
+    const resp = await fetch(`${openwaUrl}/api/sessions/${sessionId}/messages/send-text`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
