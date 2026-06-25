@@ -86,6 +86,17 @@ export class MensajeroService {
     // WhatsApp chatId format: 591XXXXXXXX@c.us
     const numero = telefono.replace(/[\s\-\(\)+]/g, '');
     const chatId = numero.includes('@') ? numero : `${numero}@c.us`;
+    const headers = { 'Content-Type': 'application/json', 'X-Api-Key': openwaKey };
+
+    // Asegurar que la sesión está iniciada (idempotente si ya estaba activa)
+    try {
+      await fetch(`${openwaUrl}/api/sessions/${sessionId}/start`, {
+        method: 'POST',
+        headers,
+      });
+    } catch {
+      // ignorar error de start, intentar enviar de todos modos
+    }
 
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 8000);
@@ -94,7 +105,7 @@ export class MensajeroService {
     try {
       resp = await fetch(`${openwaUrl}/api/sessions/${sessionId}/messages/send-text`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'X-Api-Key': openwaKey },
+        headers,
         body: JSON.stringify({ chatId, text: mensaje }),
         signal: controller.signal,
       });
