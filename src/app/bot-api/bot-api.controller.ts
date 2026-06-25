@@ -226,8 +226,30 @@ export class BotApiController {
       // Ignorar mensajes vacíos y grupos
       if (!texto || (msg?.from ?? '').endsWith('@g.us')) return { ok: true };
 
-      // from viene como "591XXXXXXXX@c.us" → extraer solo el número
-      const numero = (msg?.from ?? '').replace('@c.us', '').replace('@s.whatsapp.net', '');
+      // Resolver número real — WhatsApp nuevas versiones envía LID (@lid) en vez de teléfono
+      const fromRaw = msg?.from ?? '';
+      let numero: string;
+      if (fromRaw.endsWith('@lid')) {
+        // Intentar resolver LID → número real vía OpenWA contacts API
+        try {
+          const sessionId2 = body?.sessionId ?? body?.session ?? 'huellitas';
+          const openwaUrl = process.env.OPENWA_URL;
+          const openwaKey = process.env.OPENWA_API_KEY;
+          const resp = await fetch(`${openwaUrl}/api/sessions/${sessionId2}/contacts/${encodeURIComponent(fromRaw)}/phone`, {
+            headers: { 'X-Api-Key': openwaKey },
+          });
+          if (resp.ok) {
+            const data = await resp.json() as any;
+            numero = (data?.number ?? data?.phone ?? data?.id ?? fromRaw).replace(/\D/g, '');
+          } else {
+            numero = fromRaw.replace('@lid', '');
+          }
+        } catch {
+          numero = fromRaw.replace('@lid', '');
+        }
+      } else {
+        numero = fromRaw.replace('@c.us', '').replace('@s.whatsapp.net', '');
+      }
 
       this.logger.log(`📩 OpenWA webhook — de ${numero}: "${texto}"`);
       const sessionId = body?.sessionId ?? body?.session ?? 'huellitas';
