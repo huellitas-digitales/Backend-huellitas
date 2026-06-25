@@ -236,7 +236,7 @@ export class BotApiController {
           const openwaUrl = process.env.OPENWA_URL;
           const openwaKey = process.env.OPENWA_API_KEY;
           const resp = await fetch(`${openwaUrl}/api/sessions/${sessionId2}/contacts/${encodeURIComponent(fromRaw)}/phone`, {
-            headers: { 'X-Api-Key': openwaKey },
+            headers: { 'X-Api-Key': openwaKey as string },
           });
           if (resp.ok) {
             const data = await resp.json() as any;
