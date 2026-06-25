@@ -44,6 +44,14 @@ export class BotProcesadorService {
     this.logger.log(`📩 Mensaje recibido de ${numero}: "${texto}"`);
     const textoLower = texto.toLowerCase().trim();
 
+    // Debug temporal: responde con el número recibido
+    if (textoLower === 'debug') {
+      const tel2 = numero.replace(/^\+/, '').replace(/\D/g, '');
+      const local2 = tel2.length > 8 ? tel2.slice(-8) : tel2;
+      const found = await this.usuarioRepo.findOne({ where: { telefono: Like(`%${local2}%`) } });
+      return `🔍 Debug:\n- numero raw: ${numero}\n- tel limpio: ${tel2}\n- local (8d): ${local2}\n- usuario: ${found ? found.nombres + ' ' + found.apellidos : 'NO ENCONTRADO'}`;
+    }
+
     // Buscar cliente por teléfono — busca la parte local (últimos 8 dígitos) con LIKE
     const tel = numero.replace(/^\+/, '').replace(/\D/g, '');
     const telLocal = tel.length > 8 ? tel.slice(-8) : tel;
