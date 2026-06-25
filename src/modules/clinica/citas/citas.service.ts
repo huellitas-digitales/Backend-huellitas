@@ -16,28 +16,16 @@ import { LogsSistemaService } from '../../core/logs_sistema/logs_sistema.service
 @Injectable()
 export class CitasService {
   private getBoliviaDateParts(date: Date) {
-    const formatter = new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/La_Paz',
-      year: 'numeric',
-      month: 'numeric',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      second: 'numeric',
-      hour12: false,
-    });
-    
-    const parts = formatter.formatToParts(date);
-    const year = parseInt(parts.find(p => p.type === 'year')?.value || '0', 10);
-    const month = parseInt(parts.find(p => p.type === 'month')?.value || '0', 10) - 1; // 0-indexed
-    const day = parseInt(parts.find(p => p.type === 'day')?.value || '0', 10);
-    const hour = parseInt(parts.find(p => p.type === 'hour')?.value || '0', 10);
-    const minute = parseInt(parts.find(p => p.type === 'minute')?.value || '0', 10);
-    const second = parseInt(parts.find(p => p.type === 'second')?.value || '0', 10);
-
-    const adjustedHour = hour === 24 ? 0 : hour;
-
-    return { year, month, day, hour: adjustedHour, minute, second };
+    // Bolivia = UTC-4, sin horario de verano — offset manual para evitar problemas de ICU en Docker
+    const d = new Date(date.getTime() - 4 * 60 * 60 * 1000);
+    return {
+      year:   d.getUTCFullYear(),
+      month:  d.getUTCMonth(),     // 0-indexed
+      day:    d.getUTCDate(),
+      hour:   d.getUTCHours(),
+      minute: d.getUTCMinutes(),
+      second: d.getUTCSeconds(),
+    };
   }
 
   constructor(
@@ -654,16 +642,20 @@ const slots: { hora: string; ocupado: boolean }[] = [];    const duracionSlotMin
     const [horaInicioH, horaInicioM] = horario.hora_inicio.split(':').map(Number);
     const [horaFinH, horaFinM] = horario.hora_fin.split(':').map(Number);
 
+    // Bolivia = UTC-4: hora Bolivia + 4 = hora UTC
     let horaActual = new Date(inicioDia);
-    horaActual.setHours(horaInicioH, horaInicioM, 0, 0);
+    horaActual.setUTCHours(horaInicioH + 4, horaInicioM, 0, 0);
 
     const limiteTrabajo = new Date(inicioDia);
-    limiteTrabajo.setHours(horaFinH, horaFinM, 0, 0);
+    limiteTrabajo.setUTCHours(horaFinH + 4, horaFinM, 0, 0);
 
     // Iterar creando bloques de 30 minutos hasta que termine su turno
     while (horaActual < limiteTrabajo) {
       const horaFinSlot = new Date(horaActual.getTime() + duracionSlotMinutos * 60000);
-      const horaString = `${horaActual.getHours().toString().padStart(2, '0')}:${horaActual.getMinutes().toString().padStart(2, '0')}`;
+      // Mostrar hora en Bolivia (UTC - 4)
+      const bH = horaActual.getUTCHours() - 4;
+      const bM = horaActual.getUTCMinutes();
+      const horaString = `${bH.toString().padStart(2, '0')}:${bM.toString().padStart(2, '0')}`;
 
       // Comprobar colisión: ¿Este slot choca con la duración de alguna cita existente?
       const ocupado = citasExistentes.some(cita => {
