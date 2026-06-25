@@ -88,18 +88,37 @@ export class MensajeroService {
     const chatId = numero.includes('@') ? numero : `${numero}@c.us`;
     const headers = { 'Content-Type': 'application/json', 'X-Api-Key': openwaKey };
 
-    // Asegurar que la sesión está iniciada (idempotente si ya estaba activa)
+    // Verificar estado de la sesión
+    let sessionStatus = 'unknown';
     try {
-      await fetch(`${openwaUrl}/api/sessions/${sessionId}/start`, {
-        method: 'POST',
-        headers,
-      });
-    } catch {
-      // ignorar error de start, intentar enviar de todos modos
+      const statusResp = await fetch(`${openwaUrl}/api/sessions/${sessionId}`, { headers });
+      const statusBody = await statusResp.text();
+      this.logger.log(`OpenWA session status [${sessionId}]: HTTP ${statusResp.status} — ${statusBody}`);
+      if (statusResp.ok) {
+        try { sessionStatus = (JSON.parse(statusBody) as any)?.status ?? 'unknown'; } catch { /* */ }
+      }
+    } catch (e) {
+      this.logger.warn(`OpenWA status check failed: ${e.message}`);
+    }
+
+    // Si no está activa, intentar iniciarla
+    if (sessionStatus !== 'WORKING') {
+      try {
+        const startResp = await fetch(`${openwaUrl}/api/sessions/${sessionId}/start`, {
+          method: 'POST',
+          headers,
+        });
+        const startBody = await startResp.text();
+        this.logger.log(`OpenWA start [${sessionId}]: HTTP ${startResp.status} — ${startBody}`);
+        // Esperar 3s para que inicialice
+        await new Promise(r => setTimeout(r, 3000));
+      } catch (e) {
+        this.logger.warn(`OpenWA start failed: ${e.message}`);
+      }
     }
 
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), 8000);
+    const timer = setTimeout(() => controller.abort(), 10000);
 
     let resp: Response;
     try {
