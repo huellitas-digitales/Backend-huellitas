@@ -100,8 +100,9 @@ export class MensajeroService {
           ACTIVE_STATUSES.includes(s.status)
         ) ?? sessions.find((s: any) => ACTIVE_STATUSES.includes(s.status));
         if (found) {
-          activeSession = found.name ?? found.id ?? found.sessionId ?? sessionId;
-          this.logger.log(`OpenWA sesión encontrada: ${activeSession} (estado: ${found.status})`);
+          // Preferir el UUID (id) sobre el nombre — el endpoint /send-text acepta el UUID
+          activeSession = found.id ?? found.name ?? found.sessionId ?? sessionId;
+          this.logger.log(`OpenWA sesión encontrada: ${activeSession} (nombre: ${found.name}, estado: ${found.status})`);
         } else {
           this.logger.warn(`OpenWA: ninguna sesión activa encontrada, usando ${sessionId}`);
         }
