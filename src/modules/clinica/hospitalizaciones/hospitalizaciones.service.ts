@@ -5,12 +5,15 @@ import { Hospitalizacion } from './entities/hospitalizacione.entity';
 import { CreateHospitalizacioneDto } from './dto/create-hospitalizacione.dto';
 import { UpdateHospitalizacioneDto } from './dto/update-hospitalizacione.dto';
 import { HospitalizacionesResponseDto } from './dto/hospitalizaciones-response.dto';
+import { TransaccionCaja } from '../../caja/transacciones_caja/entities/transacciones_caja.entity';
 
 @Injectable()
 export class HospitalizacionesService {
   constructor(
     @InjectRepository(Hospitalizacion)
     private readonly hospitalizacionRepo: Repository<Hospitalizacion>,
+    @InjectRepository(TransaccionCaja)
+    private readonly transaccionRepo: Repository<TransaccionCaja>,
   ) {}
 
   private mapToResponse(h: Hospitalizacion): any {
@@ -122,7 +125,22 @@ export class HospitalizacionesService {
       relations: ['mascota', 'mascota.raza', 'veterinario', 'insumos', 'vacunasAplicadas'],
       order: { fechaIngreso: 'DESC' },
     });
-    return hospitalizaciones.map(h => this.mapToResponse(h));
+
+    // IDs de hospitalizaciones que ya tienen una transacción completada
+    const txCompletadas = await this.transaccionRepo.find({
+      where: { estadoTransaccion: 'Completada' },
+      select: ['id_hospitalizacion_fk'],
+    });
+    const cobradosSet = new Set(
+      txCompletadas
+        .map(t => t.id_hospitalizacion_fk)
+        .filter(Boolean),
+    );
+
+    return hospitalizaciones.map(h => ({
+      ...this.mapToResponse(h),
+      cobrado: cobradosSet.has(h.id),
+    }));
   }
 
   async findByMascota(idMascota: string): Promise<any[]> {

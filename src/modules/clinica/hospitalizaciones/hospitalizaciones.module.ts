@@ -9,14 +9,16 @@ import { HospitalizacionInsumosService } from './hospitalizacion-insumos.service
 import { HospitalizacionInsumosController } from './hospitalizacion-insumos.controller';
 import { Producto } from '../../inventario/productos/entities/producto.entity';
 import { Servicio } from '../../core/servicios/entities/servicio.entity';
+import { TransaccionCaja } from '../../caja/transacciones_caja/entities/transacciones_caja.entity';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([
       Hospitalizacion,
-      HospitalizacionInsumo, // 👈 Añadido
-      Producto,              // 👈 Añadido
-      Servicio               // 👈 Añadido
+      HospitalizacionInsumo,
+      Producto,
+      Servicio,
+      TransaccionCaja,
     ])
   ],
   controllers: [
