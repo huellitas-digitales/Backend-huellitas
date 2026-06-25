@@ -88,33 +88,30 @@ export class MensajeroService {
     const chatId = numero.includes('@') ? numero : `${numero}@c.us`;
     const headers = { 'Content-Type': 'application/json', 'X-Api-Key': openwaKey };
 
-    // Verificar estado de la sesión
-    let sessionStatus = 'unknown';
+    // Resolver la sesión activa real (puede diferir del parámetro hardcodeado)
+    let activeSession = sessionId;
     try {
-      const statusResp = await fetch(`${openwaUrl}/api/sessions/${sessionId}`, { headers });
-      const statusBody = await statusResp.text();
-      this.logger.log(`OpenWA session status [${sessionId}]: HTTP ${statusResp.status} — ${statusBody}`);
-      if (statusResp.ok) {
-        try { sessionStatus = (JSON.parse(statusBody) as any)?.status ?? 'unknown'; } catch { /* */ }
+      const listResp = await fetch(`${openwaUrl}/api/sessions`, { headers });
+      const listBody = await listResp.text();
+      this.logger.log(`OpenWA sessions list: HTTP ${listResp.status} — ${listBody}`);
+      if (listResp.ok) {
+        const sessions: any[] = JSON.parse(listBody);
+        // Buscar la sesión solicitada o la primera WORKING
+        const working = sessions.find((s: any) =>
+          (s.name === sessionId || s.id === sessionId || s.sessionId === sessionId) &&
+          (s.status === 'WORKING' || s.status === 'CONNECTED' || s.status === 'AUTHENTICATED')
+        ) ?? sessions.find((s: any) =>
+          s.status === 'WORKING' || s.status === 'CONNECTED' || s.status === 'AUTHENTICATED'
+        );
+        if (working) {
+          activeSession = working.name ?? working.id ?? working.sessionId ?? sessionId;
+          this.logger.log(`OpenWA usando sesión activa: ${activeSession} (estado: ${working.status})`);
+        } else {
+          this.logger.warn(`OpenWA: ninguna sesión WORKING encontrada. Sesiones: ${listBody}`);
+        }
       }
     } catch (e) {
-      this.logger.warn(`OpenWA status check failed: ${e.message}`);
-    }
-
-    // Si no está activa, intentar iniciarla
-    if (sessionStatus !== 'WORKING') {
-      try {
-        const startResp = await fetch(`${openwaUrl}/api/sessions/${sessionId}/start`, {
-          method: 'POST',
-          headers,
-        });
-        const startBody = await startResp.text();
-        this.logger.log(`OpenWA start [${sessionId}]: HTTP ${startResp.status} — ${startBody}`);
-        // Esperar 3s para que inicialice
-        await new Promise(r => setTimeout(r, 3000));
-      } catch (e) {
-        this.logger.warn(`OpenWA start failed: ${e.message}`);
-      }
+      this.logger.warn(`OpenWA sessions list failed: ${e.message}`);
     }
 
     const controller = new AbortController();
@@ -122,7 +119,7 @@ export class MensajeroService {
 
     let resp: Response;
     try {
-      resp = await fetch(`${openwaUrl}/api/sessions/${sessionId}/messages/send-text`, {
+      resp = await fetch(`${openwaUrl}/api/sessions/${activeSession}/messages/send-text`, {
         method: 'POST',
         headers,
         body: JSON.stringify({ chatId, text: mensaje }),

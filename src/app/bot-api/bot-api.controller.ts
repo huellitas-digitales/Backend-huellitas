@@ -216,7 +216,7 @@ export class BotApiController {
   @HttpCode(200)
   @ApiOperation({ summary: 'OpenWA: recibe mensajes de WhatsApp entrantes' })
   async recibirWebhookOpenWA(@Body() body: any) {
-    this.logger.log(`🔔 OpenWA raw event: ${body?.event} | type: ${body?.data?.type} | from: ${body?.data?.from}`);
+    this.logger.log(`🔔 OpenWA raw event: ${body?.event} | type: ${body?.data?.type} | from: ${body?.data?.from} | sessionId: ${body?.sessionId ?? body?.session ?? '(none)'}`);
     try {
       if (body?.event !== 'message.received') return { ok: true };
 
