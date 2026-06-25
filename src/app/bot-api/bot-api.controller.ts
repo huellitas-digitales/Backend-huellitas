@@ -216,23 +216,23 @@ export class BotApiController {
   @HttpCode(200)
   @ApiOperation({ summary: 'OpenWA: recibe mensajes de WhatsApp entrantes' })
   async recibirWebhookOpenWA(@Body() body: any) {
+    this.logger.log(`🔔 OpenWA raw event: ${body?.event} | type: ${body?.data?.type} | from: ${body?.data?.from}`);
     try {
-      // OpenWA envía: { event, sessionId, data: { from, body, type, ... } }
       if (body?.event !== 'message.received') return { ok: true };
 
       const msg   = body?.data;
-      const texto = msg?.body ?? '';
-      const tipo  = msg?.type ?? '';
+      const texto = (msg?.body ?? msg?.text ?? '').trim();
 
-      // Solo procesar mensajes de texto, ignorar grupos, estados
-      if (tipo !== 'chat' || !texto || msg?.from?.endsWith('@g.us')) return { ok: true };
+      // Ignorar mensajes vacíos y grupos
+      if (!texto || (msg?.from ?? '').endsWith('@g.us')) return { ok: true };
 
       // from viene como "591XXXXXXXX@c.us" → extraer solo el número
-      const numero = (msg?.from ?? '').replace('@c.us', '');
+      const numero = (msg?.from ?? '').replace('@c.us', '').replace('@s.whatsapp.net', '');
 
       this.logger.log(`📩 OpenWA webhook — de ${numero}: "${texto}"`);
+      const sessionId = body?.sessionId ?? body?.session ?? 'huellitas';
       const respuesta = await this.botProcesador.procesarMensaje(numero, texto);
-      await this.mensajero.enviarViaOpenWA(numero, respuesta, body?.sessionId ?? 'default');
+      await this.mensajero.enviarViaOpenWA(numero, respuesta, sessionId);
       this.logger.log(`🤖 Respuesta OpenWA enviada a ${numero}: ${respuesta.substring(0, 60)}...`);
     } catch (err) {
       this.logger.error(`Error procesando webhook OpenWA: ${err.message}`);
