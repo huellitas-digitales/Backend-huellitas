@@ -47,9 +47,11 @@ export class BotProcesadorService {
     // Buscar cliente por teléfono (prueba con y sin código de país 591)
     const tel = numero.replace(/^\+/, '');
     const telSin591 = tel.startsWith('591') ? tel.slice(3) : tel;
+    this.logger.log(`🔍 Buscando usuario — numero original: "${numero}" | tel: "${tel}" | sin591: "${telSin591}"`);
     const cliente = await this.usuarioRepo.findOne({ where: { telefono: tel } })
       ?? await this.usuarioRepo.findOne({ where: { telefono: telSin591 } })
       ?? await this.usuarioRepo.findOne({ where: { telefono: `+${tel}` } });
+    this.logger.log(`🔍 Cliente encontrado: ${cliente ? cliente.nombres : 'NO ENCONTRADO'}`);
 
     // Cargar sesión actual
     let sesion: SesionBot = sesiones.get(numero) ?? { paso: 0 };
