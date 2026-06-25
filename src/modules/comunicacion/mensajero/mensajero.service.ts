@@ -87,14 +87,20 @@ export class MensajeroService {
     const numero = telefono.replace(/[\s\-\(\)+]/g, '');
     const chatId = numero.includes('@') ? numero : `${numero}@c.us`;
 
-    const resp = await fetch(`${openwaUrl}/api/sessions/${sessionId}/messages/send-text`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Api-Key': openwaKey,
-      },
-      body: JSON.stringify({ chatId, text: mensaje }),
-    });
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+
+    let resp: Response;
+    try {
+      resp = await fetch(`${openwaUrl}/api/sessions/${sessionId}/messages/send-text`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Api-Key': openwaKey },
+        body: JSON.stringify({ chatId, text: mensaje }),
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timer);
+    }
 
     if (!resp.ok) {
       const err = await resp.text();
