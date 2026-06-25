@@ -449,6 +449,7 @@ export class ReportesService {
         mascota: mascota ? { id: mascota.id, nombre: mascota.nombre } : null,
         dueno: dueno
           ? {
+              id: dueno.id,
               nombres: dueno.nombres,
               apellidos: dueno.apellidos,
               telefono: dueno.telefono ?? null,
