@@ -5,6 +5,7 @@ import { Repository, Like } from 'typeorm';
 import { Usuario } from '../../modules/identidad/usuarios/entities/usuario.entity';
 import { Mascota } from '../../modules/identidad/mascotas/entities/mascota.entity';
 import { Servicio } from '../../modules/core/servicios/entities/servicio.entity';
+import { HorarioAtencion } from '../../modules/clinica/horarios_atencion/entities/horarios_atencion.entity';
 import { CitasService } from '../../modules/clinica/citas/citas.service';
 import { InteraccionesBotService } from '../../modules/comunicacion/interacciones_bot/interacciones_bot.service';
 import { OrigenReserva } from '../../modules/clinica/citas/dto/create-cita.dto';
@@ -36,6 +37,8 @@ export class BotProcesadorService {
     private readonly mascotaRepo: Repository<Mascota>,
     @InjectRepository(Servicio)
     private readonly servicioRepo: Repository<Servicio>,
+    @InjectRepository(HorarioAtencion)
+    private readonly horarioRepo: Repository<HorarioAtencion>,
     private readonly citasService: CitasService,
     private readonly interaccionesService: InteraccionesBotService,
   ) {}
@@ -274,11 +277,27 @@ export class BotProcesadorService {
     sesion.paso = 4;
     sesiones.set(numero, sesion);
 
+    // Obtener horarios del veterinario
+    const DIAS = ['', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+    const horarios = await this.horarioRepo
+      .createQueryBuilder('h')
+      .leftJoin('h.veterinario', 'v')
+      .where('v.id = :id', { id: sesion.veterinarioId })
+      .andWhere('h.activo = true')
+      .orderBy('h.dia_semana', 'ASC')
+      .getMany();
+
+    let horarioTexto = '';
+    if (horarios.length > 0) {
+      const lineas = horarios.map(h => `${DIAS[h.dia_semana]}: ${h.hora_inicio.slice(0,5)} - ${h.hora_fin.slice(0,5)}`);
+      horarioTexto = `\n\n📋 *Horario de ${sesion.veterinarioNombre}:*\n${lineas.join('\n')}`;
+    }
+
     return (
-      `✅ Veterinario: *${sesion.veterinarioNombre}*\n\n` +
+      `✅ Veterinario: *${sesion.veterinarioNombre}*${horarioTexto}\n\n` +
       `📅 ¿Para qué fecha quieres la cita?\n\n` +
       `Escribe en formato: *DD/MM/YYYY*\n` +
-      `Ejemplo: *15/06/2026*`
+      `Ejemplo: *25/06/2026*`
     );
   }
 
