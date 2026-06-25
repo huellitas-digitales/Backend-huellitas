@@ -74,12 +74,12 @@ export class NotificacionSchedulerService {
     this.logger.log('Ejecutando recordatorio de citas...');
     try {
       const canales = await this.canalesActivos();
-      // Para pruebas: busca citas de hoy Y mañana
+      // Busca citas pendientes de hoy hasta 7 días adelante
       const hoy = new Date();
-      const manana = new Date();
-      manana.setDate(manana.getDate() + 1);
+      const enSieteDias = new Date();
+      enSieteDias.setDate(enSieteDias.getDate() + 7);
       const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate(), 0, 0, 0);
-      const fin = new Date(manana.getFullYear(), manana.getMonth(), manana.getDate(), 23, 59, 59);
+      const fin = new Date(enSieteDias.getFullYear(), enSieteDias.getMonth(), enSieteDias.getDate(), 23, 59, 59);
 
       const citas = await this.citaRepo.find({
         where: { fecha_hora_inicio: Between(inicio, fin), estado: 'Pendiente' },
