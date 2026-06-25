@@ -44,9 +44,12 @@ export class BotProcesadorService {
     this.logger.log(`📩 Mensaje recibido de ${numero}: "${texto}"`);
     const textoLower = texto.toLowerCase().trim();
 
-    // Buscar cliente por teléfono
+    // Buscar cliente por teléfono (prueba con y sin código de país 591)
     const tel = numero.replace(/^\+/, '');
-    const cliente = await this.usuarioRepo.findOne({ where: { telefono: tel } });
+    const telSin591 = tel.startsWith('591') ? tel.slice(3) : tel;
+    const cliente = await this.usuarioRepo.findOne({ where: { telefono: tel } })
+      ?? await this.usuarioRepo.findOne({ where: { telefono: telSin591 } })
+      ?? await this.usuarioRepo.findOne({ where: { telefono: `+${tel}` } });
 
     // Cargar sesión actual
     let sesion: SesionBot = sesiones.get(numero) ?? { paso: 0 };
@@ -395,7 +398,7 @@ Mensaje: ${texto}`;
         },
       );
 
-      const data = await resp.json() as any;
+      const data = await resp.json();
       const content = data?.candidates?.[0]?.content?.parts?.[0]?.text ?? '{}';
       // Extraer JSON del bloque markdown si Gemini lo envuelve
       const jsonMatch = content.match(/\{[\s\S]*\}/);
