@@ -35,7 +35,7 @@ export class RecetasController {
   @ApiResponse({ status: 200, description: 'Archivo PDF de la receta médica.' })
   async descargarPdf(
     @Param('id', new ParseUUIDPipe({ version: '4' })) id: string,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+     
     @Res() res: any,
   ): Promise<void> {
     const buffer = await this.recetasService.generarPdf(id);

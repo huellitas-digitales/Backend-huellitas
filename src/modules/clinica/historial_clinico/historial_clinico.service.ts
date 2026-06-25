@@ -639,7 +639,7 @@ export class HistorialClinicoService {
     // 4. Para cada hospitalización, traer el monitoreo diario
     const hospitalizacionIds = historiales
       .map(h => h.hospitalizacion?.id)
-      .filter(Boolean) as string[];
+      .filter(Boolean);
 
     const monitoreos = hospitalizacionIds.length > 0
       ? await this.monitoreoRepository

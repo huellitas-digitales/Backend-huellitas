@@ -40,7 +40,7 @@ export class KardexInventarioService {
         throw new BadRequestException('Stock insuficiente para registrar el movimiento.');
       }
 
-      let loteId = createDto.id_lote_fk ?? null;
+      const loteId = createDto.id_lote_fk ?? null;
       if (loteId) {
         const lote = await loteRepo.findOne({
           where: { id: loteId, idProductoFk: producto.id },

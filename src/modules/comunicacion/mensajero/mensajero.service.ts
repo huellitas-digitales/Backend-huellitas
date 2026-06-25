@@ -130,7 +130,7 @@ export class MensajeroService {
   private async enviarWhatsApp(mensaje: string): Promise<void> {
     const match = mensaje.match(/^DEST:(\S+)\n([\s\S]+)$/);
     if (!match) throw new Error('Formato WhatsApp incorrecto (falta DEST:numero)');
-    await this.enviarWhatsAppDirecto(match[1], match[2].trim());
+    await this.enviarViaOpenWA(match[1], match[2].trim(), 'huellitas');
   }
 
   private async enviarEmail(mensaje: string, asunto: string): Promise<void> {
