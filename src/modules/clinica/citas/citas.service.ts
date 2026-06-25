@@ -105,15 +105,16 @@ async create(createCitaDto: CreateCitaDto, usuarioId: string): Promise<CitaRespo
     // --- 1. PARSEO LITERAL DE HORA EN BOLIVIA ---
     let fechaString = '';
     
-    // Si NestJS lo convirtió en un objeto Date, extraemos los números exactos
+    // Si NestJS lo convirtió en un objeto Date, extraemos en hora Bolivia (UTC-4)
     if (fecha_hora_inicio instanceof Date) {
-      const yyyy = fecha_hora_inicio.getFullYear();
-      const mm = String(fecha_hora_inicio.getMonth() + 1).padStart(2, '0');
-      const dd = String(fecha_hora_inicio.getDate()).padStart(2, '0');
-      const hh = String(fecha_hora_inicio.getHours()).padStart(2, '0');
-      const min = String(fecha_hora_inicio.getMinutes()).padStart(2, '0');
-      const ss = String(fecha_hora_inicio.getSeconds()).padStart(2, '0');
-      
+      const b = new Date(fecha_hora_inicio.getTime() - 4 * 60 * 60 * 1000);
+      const yyyy = b.getUTCFullYear();
+      const mm = String(b.getUTCMonth() + 1).padStart(2, '0');
+      const dd = String(b.getUTCDate()).padStart(2, '0');
+      const hh = String(b.getUTCHours()).padStart(2, '0');
+      const min = String(b.getUTCMinutes()).padStart(2, '0');
+      const ss = String(b.getUTCSeconds()).padStart(2, '0');
+
       fechaString = `${yyyy}-${mm}-${dd}T${hh}:${min}:${ss}`;
     } else {
       // Si llegó como string puro, lo usamos tal cual
