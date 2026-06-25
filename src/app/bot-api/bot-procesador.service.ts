@@ -1,7 +1,7 @@
 /* eslint-disable prefer-const */
 import { Injectable, Logger } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { Repository, Like } from 'typeorm';
 import { Usuario } from '../../modules/identidad/usuarios/entities/usuario.entity';
 import { Mascota } from '../../modules/identidad/mascotas/entities/mascota.entity';
 import { Servicio } from '../../modules/core/servicios/entities/servicio.entity';
@@ -44,14 +44,10 @@ export class BotProcesadorService {
     this.logger.log(`📩 Mensaje recibido de ${numero}: "${texto}"`);
     const textoLower = texto.toLowerCase().trim();
 
-    // Buscar cliente por teléfono (prueba con y sin código de país 591)
-    const tel = numero.replace(/^\+/, '');
-    const telSin591 = tel.startsWith('591') ? tel.slice(3) : tel;
-    this.logger.log(`🔍 Buscando usuario — numero original: "${numero}" | tel: "${tel}" | sin591: "${telSin591}"`);
-    const cliente = await this.usuarioRepo.findOne({ where: { telefono: tel } })
-      ?? await this.usuarioRepo.findOne({ where: { telefono: telSin591 } })
-      ?? await this.usuarioRepo.findOne({ where: { telefono: `+${tel}` } });
-    this.logger.log(`🔍 Cliente encontrado: ${cliente ? cliente.nombres : 'NO ENCONTRADO'}`);
+    // Buscar cliente por teléfono — busca la parte local (últimos 8 dígitos) con LIKE
+    const tel = numero.replace(/^\+/, '').replace(/\D/g, '');
+    const telLocal = tel.length > 8 ? tel.slice(-8) : tel;
+    const cliente = await this.usuarioRepo.findOne({ where: { telefono: Like(`%${telLocal}%`) } });
 
     // Cargar sesión actual
     let sesion: SesionBot = sesiones.get(numero) ?? { paso: 0 };
