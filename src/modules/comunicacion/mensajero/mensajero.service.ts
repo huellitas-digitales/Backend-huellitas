@@ -89,29 +89,38 @@ export class MensajeroService {
     const headers = { 'Content-Type': 'application/json', 'X-Api-Key': openwaKey };
 
     // Resolver la sesión activa real (puede diferir del parámetro hardcodeado)
+    const ACTIVE_STATUSES = ['WORKING', 'CONNECTED', 'AUTHENTICATED', 'ready', 'connected', 'working'];
     let activeSession = sessionId;
     try {
       const listResp = await fetch(`${openwaUrl}/api/sessions`, { headers });
-      const listBody = await listResp.text();
-      this.logger.log(`OpenWA sessions list: HTTP ${listResp.status} — ${listBody}`);
       if (listResp.ok) {
-        const sessions: any[] = JSON.parse(listBody);
-        // Buscar la sesión solicitada o la primera WORKING
-        const working = sessions.find((s: any) =>
+        const sessions: any[] = await listResp.json();
+        const found = sessions.find((s: any) =>
           (s.name === sessionId || s.id === sessionId || s.sessionId === sessionId) &&
-          (s.status === 'WORKING' || s.status === 'CONNECTED' || s.status === 'AUTHENTICATED')
-        ) ?? sessions.find((s: any) =>
-          s.status === 'WORKING' || s.status === 'CONNECTED' || s.status === 'AUTHENTICATED'
-        );
-        if (working) {
-          activeSession = working.name ?? working.id ?? working.sessionId ?? sessionId;
-          this.logger.log(`OpenWA usando sesión activa: ${activeSession} (estado: ${working.status})`);
+          ACTIVE_STATUSES.includes(s.status)
+        ) ?? sessions.find((s: any) => ACTIVE_STATUSES.includes(s.status));
+        if (found) {
+          activeSession = found.name ?? found.id ?? found.sessionId ?? sessionId;
+          this.logger.log(`OpenWA sesión encontrada: ${activeSession} (estado: ${found.status})`);
         } else {
-          this.logger.warn(`OpenWA: ninguna sesión WORKING encontrada. Sesiones: ${listBody}`);
+          this.logger.warn(`OpenWA: ninguna sesión activa encontrada, usando ${sessionId}`);
         }
       }
     } catch (e) {
       this.logger.warn(`OpenWA sessions list failed: ${e.message}`);
+    }
+
+    // En OpenWA v0.7.1 "ready" requiere llamar /start para activar la sesión para API
+    try {
+      const startResp = await fetch(`${openwaUrl}/api/sessions/${activeSession}/start`, {
+        method: 'POST',
+        headers,
+      });
+      const startBody = await startResp.text();
+      this.logger.log(`OpenWA start [${activeSession}]: HTTP ${startResp.status} — ${startBody}`);
+      if (startResp.ok) await new Promise(r => setTimeout(r, 2000));
+    } catch (e) {
+      this.logger.warn(`OpenWA start error: ${e.message}`);
     }
 
     const controller = new AbortController();
